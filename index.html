@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartPlug AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --bg:        #05070f;
+  --surface:   rgba(12,16,32,0.7);
+  --surface2:  rgba(18,24,48,0.8);
+  --border:    rgba(99,120,255,0.15);
+  --border-hi: rgba(99,120,255,0.4);
+  --blue:      #6378ff;
+  --violet:    #a855f7;
+  --cyan:      #22d3ee;
+  --green:     #4ade80;
+  --amber:     #fbbf24;
+  --red:       #f87171;
+  --text:      #e2e8f0;
+  --muted:     #64748b;
+  --dim:       #334155;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Mesh background ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%,   rgba(99,120,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 100%,  rgba(168,85,247,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,   rgba(34,211,238,0.05) 0%, transparent 70%);
+}
+
+/* grid */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(99,120,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,120,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Glass card ── */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.glass-hi {
+  background: var(--surface2);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid var(--border-hi);
+  border-radius: 16px;
+}
+
+/* ── Typography ── */
+.mono { font-family: 'JetBrains Mono', monospace; }
+.label { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+/* ── Glow effects ── */
+.glow-blue   { text-shadow: 0 0 20px rgba(99,120,255,0.7); }
+.glow-violet { text-shadow: 0 0 20px rgba(168,85,247,0.7); }
+.glow-cyan   { text-shadow: 0 0 16px rgba(34,211,238,0.6); }
+.glow-green  { text-shadow: 0 0 16px rgba(74,222,128,0.6); }
+
+.shadow-blue   { box-shadow: 0 0 30px rgba(99,120,255,0.2), 0 8px 32px rgba(0,0,0,0.5); }
+.shadow-violet { box-shadow: 0 0 30px rgba(168,85,247,0.2), 0 8px 32px rgba(0,0,0,0.5); }
+
+/* ── Tabs ── */
+.tab-bar {
+  display: flex; gap: 4px;
+  background: rgba(8,11,24,0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  position: sticky; top: 56px; z-index: 40;
+  overflow-x: auto;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 18px;
+  font-size: 0.8rem; font-weight: 500;
+  color: var(--muted);
+  border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+.tab-btn .tab-emoji { font-size: 0.95rem; }
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+
+/* ── KPI cards ── */
+.kpi-card {
+  padding: 20px 22px;
+  position: relative; overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent, var(--blue)), transparent);
+  opacity: 0.6;
+}
+.kpi-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.9rem; font-weight: 700;
+  line-height: 1; margin: 8px 0 4px;
+  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.kpi-sub { font-size: 0.65rem; color: var(--muted); }
+
+/* ── Insight card ── */
+.insight-card {
+  padding: 22px 24px;
+  position: relative; overflow: hidden;
+  min-height: 90px;
+}
+.insight-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--blue), var(--violet));
+  border-radius: 0 0 0 16px;
+}
+
+/* ── IA Thinking animation ── */
+.thinking-dots span {
+  display: inline-block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--blue);
+  animation: dotBounce 1.2s ease-in-out infinite;
+  margin: 0 2px;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Forms ── */
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.field input, .field select {
+  background: rgba(8,11,24,0.8);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem; border-radius: 10px;
+  padding: 12px 15px; outline: none; width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus, .field select:focus {
+  border-color: rgba(99,120,255,0.5);
+  box-shadow: 0 0 0 3px rgba(99,120,255,0.1);
+}
+.field input::placeholder { color: var(--dim); }
+.field .err { font-size: 0.63rem; color: var(--red); display: none; }
+.field.invalid input, .field.invalid select { border-color: rgba(248,113,113,0.5); }
+.field.invalid .err { display: block; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
+  border: none; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+}
+.btn:hover  { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue), #4f68e8);
+  color: #fff;
+  box-shadow: 0 0 24px rgba(99,120,255,0.35), 0 4px 16px rgba(0,0,0,0.4);
+}
+.btn-primary:hover { box-shadow: 0 0 36px rgba(99,120,255,0.55), 0 6px 20px rgba(0,0,0,0.5); }
+
+.btn-sim {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+  box-shadow: 0 0 24px rgba(168,85,247,0.35), 0 4px 16px rgba(0,0,0,0.4);
+}
+.btn-sim:hover { box-shadow: 0 0 36px rgba(168,85,247,0.55), 0 6px 20px rgba(0,0,0,0.5); }
+
+.btn-ghost {
+  background: rgba(99,120,255,0.08);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border-hi); }
+
+/* ── Status dot ── */
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.dot-blue   { background: var(--blue);   animation: pulseDot 2s infinite; box-shadow: 0 0 7px var(--blue); }
+.dot-violet { background: var(--violet); animation: pulseDot 2s infinite; box-shadow: 0 0 7px var(--violet); }
+.dot-green  { background: var(--green);  animation: pulseDot 2s infinite; box-shadow: 0 0 7px var(--green); }
+.dot-red    { background: var(--red); }
+.dot-dim    { background: var(--dim); }
+
+/* ── Log lines ── */
+.log-line { font-size: 0.67rem; line-height: 1.7; font-family: 'JetBrains Mono', monospace; }
+.log-line::before { content: '› '; color: rgba(99,120,255,0.4); }
+
+/* ── Device row ── */
+.dev-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(8,11,24,0.5);
+  transition: background 0.2s, border-color 0.2s;
+}
+.dev-row:hover { background: rgba(99,120,255,0.05); border-color: var(--border-hi); }
+
+/* ── Bar ── */
+.bar-track { background: var(--dim); border-radius: 3px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 3px; transition: width 0.9s cubic-bezier(0.16,1,0.3,1); }
+
+/* ── Meter ring ── */
+.ring {
+  stroke-dasharray: 427;
+  stroke-dashoffset: 427;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1), stroke 0.5s;
+  stroke-linecap: round;
+}
+
+/* ── Tele history row ── */
+.tele-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: rgba(8,11,24,0.6);
+}
+
+/* ── Toast ── */
+.toast {
+  pointer-events: auto;
+  padding: 12px 16px; border-radius: 10px;
+  font-size: 0.76rem; display: flex; align-items: center; gap: 10px;
+  backdrop-filter: blur(20px);
+  animation: slideIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  max-width: 320px;
+}
+.toast-success { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); color: var(--green); }
+.toast-error   { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+.toast-info    { background: rgba(99,120,255,0.12);  border: 1px solid rgba(99,120,255,0.3);  color: var(--blue); }
+.toast-warn    { background: rgba(251,191,36,0.12);  border: 1px solid rgba(251,191,36,0.3);  color: var(--amber); }
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; border-radius: 20px; font-size: 0.6rem;
+  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.badge-blue   { background: rgba(99,120,255,0.15);  color: var(--blue);   border: 1px solid rgba(99,120,255,0.3); }
+.badge-violet { background: rgba(168,85,247,0.15); color: var(--violet); border: 1px solid rgba(168,85,247,0.3); }
+.badge-green  { background: rgba(74,222,128,0.15);  color: var(--green);  border: 1px solid rgba(74,222,128,0.3); }
+.badge-amber  { background: rgba(251,191,36,0.15);  color: var(--amber);  border: 1px solid rgba(251,191,36,0.3); }
+.badge-red    { background: rgba(248,113,113,0.15); color: var(--red);    border: 1px solid rgba(248,113,113,0.3); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 4px; }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulseDot {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+  40%         { transform: scale(1.1); opacity: 1; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+@keyframes flicker {
+  0%,100% { opacity:1; } 92%{ opacity:1; } 93%{ opacity:0.3; }
+  94%{ opacity:1; } 96%{ opacity:0.6; } 97%{ opacity:1; }
+}
+@keyframes scanLine {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(600%); }
+}
+
+.anim-rise { opacity:0; animation: rise 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+.s1 { animation-delay: 0.05s; } .s2 { animation-delay: 0.1s; }
+.s3 { animation-delay: 0.15s; } .s4 { animation-delay: 0.2s; }
+.s5 { animation-delay: 0.25s; }
+
+/* Empty state */
+.empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:28px; gap:10px; color:var(--dim); text-align:center; }
+.empty svg { opacity:0.3; }
+.empty p { font-size:0.72rem; line-height:1.65; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .kpi-val { font-size: 1.5rem; }
+  .tab-btn { padding: 12px 12px; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+<header style="position:sticky;top:0;z-index:50;background:rgba(5,7,15,0.92);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);">
+  <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div style="width:34px;height:34px;border-radius:10px;
+        background:linear-gradient(135deg,rgba(99,120,255,0.3),rgba(168,85,247,0.3));
+        border:1px solid rgba(99,120,255,0.4);
+        display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M9 1L3 9h5l-1 6 7-9H9l1-5z" fill="url(#boltGrad)"/>
+          <defs><linearGradient id="boltGrad" x1="3" y1="1" x2="13" y2="15" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6378ff"/><stop offset="1" stop-color="#a855f7"/>
+          </linearGradient></defs>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:700;letter-spacing:0.05em;
+          background:linear-gradient(90deg,#6378ff,#a855f7);
+          -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+          animation:flicker 6s ease-in-out infinite;">
+          SmartPlug AI
+        </div>
+        <div class="label" style="margin-top:1px;">Gestão Inteligente de Consumo IoT</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden sm:flex items-center gap-2">
+        <span class="dot dot-green"></span>
+        <span style="font-size:0.68rem;color:var(--muted);">ONLINE</span>
+      </div>
+      <div style="text-align:right;">
+        <div id="clock" class="mono glow-blue" style="font-size:0.85rem;color:var(--blue);"></div>
+        <div class="label" style="margin-top:1px;">ao vivo</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════ TABS ═══════════════════════════════════ -->
+<nav class="tab-bar max-w-6xl" style="margin:0 auto;">
+  <button class="tab-btn active" onclick="switchTab('monitor',this)">
+    <span class="tab-emoji">📊</span> Monitoramento
+  </button>
+  <button class="tab-btn" onclick="switchTab('cadastro',this)">
+    <span class="tab-emoji">🔌</span> Cadastro
+  </button>
+  <button class="tab-btn" onclick="switchTab('simulador',this)">
+    <span class="tab-emoji">🛠️</span> Simulador
+    <span class="badge badge-violet" style="font-size:0.55rem;padding:1px 6px;">Modo Técnico</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════ CONTENT ═══════════════════════════════════ -->
+<div class="max-w-6xl mx-auto px-4 py-7" style="position:relative;z-index:10;">
+
+<!-- ══════════════════════════════ ABA: MONITORAMENTO ══════════════════════════════ -->
+<div id="tab-monitor" class="tab-pane active">
+
+  <!-- Banner aguardando -->
+  <div id="waiting-banner" class="glass anim-rise mb-6 px-5 py-4 flex items-start gap-4"
+    style="border-color:rgba(99,120,255,0.2);">
+    <span class="dot dot-blue" style="margin-top:5px;"></span>
+    <p style="font-size:0.76rem;line-height:1.7;color:var(--muted);">
+      Nenhum dado recebido ainda.
+      Vá até <strong style="color:var(--blue);">Simulador</strong> e clique em
+      <strong style="color:var(--violet);">"Simular Telemetria"</strong> para iniciar o monitoramento.
+    </p>
+  </div>
+
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+
+    <div class="glass kpi-card anim-rise s1 shadow-blue" style="--accent:var(--blue);">
+      <div class="label">Consumo Total</div>
+      <div class="kpi-val glow-blue" id="kpi-watts" style="color:var(--blue);">— W</div>
+      <div class="kpi-sub" id="kpi-watts-sub">aguardando telemetria</div>
+    </div>
+
+    <div class="glass kpi-card anim-rise s2" style="--accent:var(--cyan);">
+      <div class="label">kWh Acumulado</div>
+      <div class="kpi-val glow-cyan" id="kpi-kwh" style="color:var(--cyan);">—</div>
+      <div class="kpi-sub">nesta sessão</div>
+    </div>
+
+    <div class="glass kpi-card anim-rise s3" style="--accent:var(--amber);">
+      <div class="label">Custo Est. Hoje</div>
+      <div class="kpi-val" id="kpi-cost" style="color:var(--amber);">—</div>
+      <div class="kpi-sub" id="kpi-cost-sub">(W ÷ 1000) × 0,92</div>
+    </div>
+
+    <div class="glass kpi-card anim-rise s4" style="--accent:var(--muted);">
+      <div class="label">Dispositivos</div>
+      <div class="kpi-val mono" id="kpi-devs" style="color:var(--text);">0 / 0</div>
+      <div class="kpi-sub">cadastrados</div>
+    </div>
+  </div>
+
+  <!-- IA INSIGHT CARD -->
+  <div class="glass-hi insight-card anim-rise s5 mb-6" id="card-ia-insight"
+    style="box-shadow:0 0 40px rgba(99,120,255,0.1),0 8px 32px rgba(0,0,0,0.5);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <!-- ícone IA -->
+        <div id="ia-icon-wrap" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
+          background:linear-gradient(135deg,rgba(99,120,255,0.2),rgba(168,85,247,0.2));
+          border:1px solid rgba(99,120,255,0.3);
+          display:flex;align-items:center;justify-content:center;">
+          <svg id="ia-icon-static" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="6" r="3" stroke="url(#iaGrad)" stroke-width="1.5"/>
+            <path d="M5 10.5c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="url(#iaGrad)" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M8 13v1.5" stroke="#a855f7" stroke-width="1.3" stroke-linecap="round"/>
+            <defs><linearGradient id="iaGrad" x1="5" y1="3" x2="11" y2="13" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6378ff"/><stop offset="1" stop-color="#a855f7"/>
+            </linearGradient></defs>
+          </svg>
+          <svg id="ia-icon-spin" width="16" height="16" viewBox="0 0 16 16" fill="none"
+            style="display:none;animation:spin 0.9s linear infinite;">
+            <circle cx="8" cy="8" r="5.5" stroke="rgba(99,120,255,0.3)" stroke-width="1.5"/>
+            <path d="M8 2.5A5.5 5.5 0 0 1 13.5 8" stroke="#6378ff" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:0.92rem;font-weight:600;
+            background:linear-gradient(90deg,#6378ff,#a855f7);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            IA Insight
+          </div>
+          <div class="label">resposta do ecossistema Make.com</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="ia-badge" class="badge badge-blue" style="display:none;">Make.com</span>
+        <span id="ia-ts" style="font-size:0.6rem;color:var(--dim);font-family:'JetBrains Mono',monospace;"></span>
+      </div>
+    </div>
+
+    <!-- Conteúdo do insight -->
+    <div id="ia-content" style="padding-left:46px;">
+
+      <!-- Estado: aguardando -->
+      <div id="ia-state-idle" style="font-size:0.78rem;color:var(--dim);font-style:italic;">
+        Aguardando primeira leitura de telemetria...
+      </div>
+
+      <!-- Estado: processando -->
+      <div id="ia-state-thinking" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="thinking-dots" style="display:flex;align-items:center;gap:3px;">
+            <span></span><span></span><span></span>
+          </div>
+          <span style="font-size:0.78rem;color:var(--blue);">IA processando resposta...</span>
+        </div>
+        <div style="margin-top:10px;height:1px;background:linear-gradient(90deg,var(--blue),var(--violet),transparent);
+          animation:shimmer 2s linear infinite;background-size:200% 100%;"></div>
+      </div>
+
+      <!-- Estado: resultado -->
+      <div id="ia-state-result" style="display:none;">
+        <div id="ia-text" style="font-size:0.82rem;line-height:1.75;color:var(--text);
+          font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word;"></div>
+      </div>
+
+      <!-- Estado: erro -->
+      <div id="ia-state-error" style="display:none;">
+        <div id="ia-error-text" style="font-size:0.78rem;color:var(--red);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medidor + Devices -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:18px;">
+
+    <!-- Medidor radial -->
+    <div class="glass anim-rise" style="padding:24px;display:flex;flex-direction:column;
+      align-items:center;animation-delay:0.3s;">
+      <div class="label mb-4">Carga do Sistema</div>
+      <div style="position:relative;width:170px;height:170px;">
+        <svg width="170" height="170" viewBox="0 0 170 170" style="transform:rotate(-90deg);">
+          <circle cx="85" cy="85" r="67" fill="none" stroke="rgba(99,120,255,0.1)" stroke-width="9"/>
+          <circle id="meter-ring" cx="85" cy="85" r="67" fill="none"
+            stroke="#6378ff" stroke-width="9" class="ring"
+            style="filter:drop-shadow(0 0 8px #6378ff);"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+          align-items:center;justify-content:center;">
+          <span id="meter-pct" class="mono glow-blue"
+            style="font-size:2rem;font-weight:700;color:var(--blue);">0%</span>
+          <span class="label">capacidade</span>
+        </div>
+        <div style="position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none;">
+          <div style="height:2px;width:100%;
+            background:linear-gradient(90deg,transparent,rgba(99,120,255,0.2),transparent);
+            animation:scanLine 3s linear infinite;"></div>
+        </div>
+      </div>
+      <div id="meter-lbl" class="badge badge-blue mt-4">Aguardando dados</div>
+    </div>
+
+    <!-- Devices list -->
+    <div class="glass anim-rise" style="display:flex;flex-direction:column;animation-delay:0.35s;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;gap:8px;">
+        <span class="dot dot-blue"></span>
+        <span class="title">Dispositivos Monitorados</span>
+        <span id="dev-badge" class="badge badge-blue ml-auto">0 online</span>
+      </div>
+      <div id="dev-list" style="padding:14px;flex:1;overflow-y:auto;max-height:280px;">
+        <div class="empty">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <path d="M9 7h6M9 11h6M9 15h4"/>
+          </svg>
+          <p>Nenhum dispositivo.<br/>Cadastre na aba 🔌.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="glass anim-rise" style="animation-delay:0.4s;">
+    <div style="padding:13px 18px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:8px;">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="var(--muted)" stroke-width="1.2"/>
+        <path d="M4 4.5h5M4 7h5M4 9.5h3" stroke="var(--muted)" stroke-width="1" stroke-linecap="round"/>
+      </svg>
+      <span class="title">Log de Eventos</span>
+      <span id="log-badge" class="badge badge-blue ml-auto">0 eventos</span>
+    </div>
+    <div id="event-log" style="padding:14px 18px;max-height:130px;overflow-y:auto;">
+      <div class="empty" style="padding:14px 0;"><p>Nenhum evento ainda.</p></div>
+    </div>
+  </div>
+
+</div><!-- /tab-monitor -->
+
+<!-- ══════════════════════════════ ABA: CADASTRO ══════════════════════════════ -->
+<div id="tab-cadastro" class="tab-pane">
+
+  <div style="display:grid;grid-template-columns:1fr;gap:20px;">
+
+    <!-- Formulário -->
+    <div class="glass anim-rise" style="animation-delay:0.05s;">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
+          background:rgba(99,120,255,0.12);border:1px solid rgba(99,120,255,0.3);
+          display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="#6378ff" stroke-width="1.4"/>
+            <path d="M8 5v6M5 8h6" stroke="#6378ff" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="title">Cadastrar Novo Dispositivo</div>
+          <div class="label" style="margin-top:2px;">Registre um aparelho para monitoramento via IA</div>
+        </div>
+      </div>
+      <div style="padding:24px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:22px;">
+
+          <div class="field" id="wrap-name">
+            <label>Nome do Eletrodoméstico</label>
+            <input type="text" id="f-name" placeholder="ex: Geladeira, Ar-Condicionado..." maxlength="60" oninput="refreshCadPreview()"/>
+            <span class="err">Informe o nome do dispositivo.</span>
+          </div>
+
+          <div class="field" id="wrap-watts">
+            <label>Potência Estimada (Watts)</label>
+            <input type="number" id="f-watts" placeholder="ex: 350" min="1" max="50000" oninput="refreshCadPreview()"/>
+            <span class="err">Informe um valor válido.</span>
+          </div>
+
+          <div class="field" id="wrap-loc">
+            <label>Cômodo / Localização</label>
+            <select id="f-loc" onchange="refreshCadPreview()">
+              <option value="">— Selecione —</option>
+              <option value="Cozinha">🍳  Cozinha</option>
+              <option value="Sala">🛋️  Sala</option>
+              <option value="Quarto">🛏️  Quarto</option>
+              <option value="Escritório">💼  Escritório</option>
+              <option value="Banheiro">🚿  Banheiro</option>
+              <option value="Garagem">🚗  Garagem</option>
+              <option value="Área de Serviço">🧺  Área de Serviço</option>
+              <option value="Sala de Reuniões">📋  Sala de Reuniões</option>
+              <option value="Servidor / TI">🖥️  Servidor / TI</option>
+            </select>
+            <span class="err">Selecione uma localização.</span>
+          </div>
+
+          <div class="field">
+            <label>Tensão (V)</label>
+            <select id="f-tensao">
+              <option value="220">220V</option>
+              <option value="127">127V</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Preview JSON -->
+        <div style="margin-bottom:22px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+          <div style="padding:9px 16px;background:rgba(8,11,24,0.9);border-bottom:1px solid var(--border);
+            display:flex;align-items:center;justify-content:space-between;">
+            <span class="label">Preview JSON</span>
+            <button class="btn btn-ghost" onclick="copyCadPayload()"
+              style="padding:3px 10px;font-size:0.6rem;">copiar</button>
+          </div>
+          <pre id="cad-preview" style="padding:14px 18px;font-size:0.7rem;
+            line-height:1.8;color:var(--muted);overflow-x:auto;
+            max-height:140px;background:rgba(5,7,15,0.9);font-family:'JetBrains Mono',monospace;"></pre>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <button class="btn btn-primary" id="btn-cad" onclick="cadastrarDispositivo()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M7 4.5v5M4.5 7h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span id="btn-cad-txt">Cadastrar Dispositivo</span>
+          </button>
+          <button class="btn btn-ghost" onclick="clearCadForm()">Limpar</button>
+          <div id="cad-status" style="margin-left:auto;font-size:0.7rem;font-family:'JetBrains Mono',monospace;"></div>
+        </div>
+
+        <!-- Banner sucesso cadastro -->
+        <div id="cad-success-banner"></div>
+      </div>
+    </div>
+
+    <!-- Dispositivos cadastrados na sessão -->
+    <div class="glass anim-rise" id="session-section" style="display:none;animation-delay:0.1s;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;gap:8px;">
+        <span class="dot dot-violet"></span>
+        <span class="title">Cadastrados Nesta Sessão</span>
+        <span id="sess-badge" class="badge badge-violet ml-auto">0</span>
+      </div>
+      <div id="session-list" style="padding:14px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
+</div><!-- /tab-cadastro -->
+
+<!-- ══════════════════════════════ ABA: SIMULADOR ══════════════════════════════ -->
+<div id="tab-simulador" class="tab-pane">
+
+  <!-- Cabeçalho modo técnico -->
+  <div class="glass-hi anim-rise mb-6 px-5 py-4 flex items-start gap-4"
+    style="border-color:rgba(168,85,247,0.25);background:rgba(168,85,247,0.05);">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0;margin-top:2px;">
+      <path d="M9 2L2.5 9H7L5.5 16 15.5 9H11L13 2H9z" fill="none" stroke="#a855f7" stroke-width="1.4" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <div style="font-size:0.82rem;font-weight:600;color:var(--violet);margin-bottom:4px;">Modo Técnico — Simulador IoT</div>
+      <p style="font-size:0.72rem;color:var(--muted);line-height:1.65;">
+        Gera um payload de telemetria com valores aleatórios e envia via POST ao Make.com.
+        A resposta do campo <code style="color:var(--blue);background:rgba(99,120,255,0.1);
+        padding:1px 5px;border-radius:4px;">"analisar"</code> é exibida no card IA Insight.
+      </p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr;gap:20px;">
+
+    <!-- Painel do simulador -->
+    <div class="glass anim-rise" style="animation-delay:0.1s;">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
+            background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);
+            display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M1 8C1 4.69 4.686 2 8 2s7 2.69 7 6" stroke="#a855f7" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M3.5 8C3.5 5.515 5.69 4 8 4" stroke="#a855f7" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="1.5" fill="#a855f7"/>
+            </svg>
+          </div>
+          <div>
+            <div class="title">Simulador de Telemetria IoT</div>
+            <div class="label" style="margin-top:2px;">Webhook → Make.com → Gemini AI → Dashboard</div>
+          </div>
+        </div>
+        <div id="tele-count-badge" class="badge badge-violet" style="display:none;">0 leituras</div>
+      </div>
+
+      <div style="padding:24px;">
+        <!-- Preview do payload -->
+        <div style="margin-bottom:22px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+          <div style="padding:9px 16px;background:rgba(8,11,24,0.9);border-bottom:1px solid var(--border);
+            display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span id="tele-dot" class="dot dot-dim"></span>
+            <span class="label">Último Payload Gerado</span>
+            <button class="btn btn-ghost ml-auto" onclick="copyTelePayload()"
+              style="padding:3px 10px;font-size:0.6rem;">copiar</button>
+          </div>
+          <pre id="tele-preview" style="padding:14px 18px;font-size:0.7rem;line-height:1.8;
+            color:var(--muted);overflow-x:auto;max-height:180px;background:rgba(5,7,15,0.9);
+            font-family:'JetBrains Mono',monospace;">Clique em "Simular Telemetria" para gerar a primeira leitura...</pre>
+        </div>
+
+        <!-- Histórico -->
+        <div id="tele-history-wrap" style="margin-bottom:22px;display:none;">
+          <div class="label mb-3">Histórico de Leituras</div>
+          <div id="tele-history" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- Botão + status -->
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+          <button class="btn btn-sim" id="btn-tele" onclick="simularTelemetria()" style="position:relative;overflow:hidden;">
+            <div id="sim-shimmer" style="position:absolute;inset:0;
+              background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%);
+              transform:translateX(-100%);pointer-events:none;"></div>
+            <svg id="tele-btn-ic" width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2v3M8 11v3M2 8h3M11 8h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+            <span id="tele-btn-txt">Simular Telemetria</span>
+          </button>
+          <button class="btn btn-ghost" onclick="resetTelemetria()">Resetar histórico</button>
+        </div>
+
+        <!-- Status line -->
+        <div style="margin-top:14px;min-height:36px;">
+          <div id="tele-status-line" style="display:inline-flex;align-items:center;gap:8px;
+            padding:9px 14px;border-radius:8px;font-size:0.72rem;
+            font-family:'JetBrains Mono',monospace;background:transparent;transition:all 0.3s;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuração técnica -->
+    <div class="glass anim-rise" style="animation-delay:0.15s;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div class="title">Configuração Técnica</div>
+        <div class="label" style="margin-top:2px;">parâmetros do ecossistema</div>
+      </div>
+      <div style="padding:18px 22px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
+            <div class="label mb-2">URL Make.com</div>
+            <div class="mono" style="font-size:0.65rem;color:var(--blue);word-break:break-all;line-height:1.5;">
+              https://hook.us2.make.com/30uxnix9ym4d8mm1tm5f776ptsvlxo3n
+            </div>
+          </div>
+          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
+            <div class="label mb-2">Campo de Resposta</div>
+            <div class="mono" style="font-size:0.8rem;color:var(--violet);">{ "analisar": "..." }</div>
+          </div>
+          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
+            <div class="label mb-2">Faixa de Simulação</div>
+            <div class="mono" style="font-size:0.8rem;color:var(--cyan);">100W — 2500W</div>
+          </div>
+          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
+            <div class="label mb-2">Tarifa Aplicada</div>
+            <div class="mono" style="font-size:0.8rem;color:var(--amber);">R$ 0,92 / kWh</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /tab-simulador -->
+
+</div><!-- /content -->
+
+<!-- Toasts -->
+<div id="toasts" style="position:fixed;bottom:24px;right:20px;z-index:999;
+  display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:340px;"></div>
+
+<!-- ════════════════════════════════ JAVASCRIPT ════════════════════════════════ -->
+<script>
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║   ⚡ URL DO WEBHOOK MAKE.COM                                     ║
+// ╚══════════════════════════════════════════════════════════════════╝
+const URL_WEBHOOK_MAKE = 'https://hook.us2.make.com/30uxnix9ym4d8mm1tm5f776ptsvlxo3n';
+
+// ── Estado global ───────────────────────────────────────────────────
+const state   = { devices: [], tick: 0 };
+const tele    = { count: 0, history: [], last: null };
+const logData = [];
+
+const ICONS = {
+  'Cozinha':'🍳','Sala':'🛋️','Quarto':'🛏️','Escritório':'💼',
+  'Banheiro':'🚿','Garagem':'🚗','Área de Serviço':'🧺',
+  'Sala de Reuniões':'📋','Servidor / TI':'🖥️'
+};
+
+// ── Relógio ─────────────────────────────────────────────────────────
+(function clock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  setTimeout(clock, 1000);
+})();
+
+// ── Tick de KPIs ────────────────────────────────────────────────────
+setInterval(() => { state.tick++; if (state.devices.length > 0 && state.tick % 8 === 0) refreshKPIs(); }, 500);
+
+function refreshKPIs() {
+  const n = state.devices.length;
+  if (n === 0) { resetKPIs(); return; }
+  const totalW = state.devices.reduce((s,d) => s + d.watts, 0);
+  const hours  = state.tick / 7200;
+  const kwh    = (totalW / 1000 * hours).toFixed(3);
+  const cost   = (parseFloat(kwh) * 0.92).toFixed(2);
+  set('kpi-watts', totalW + ' W');
+  set('kpi-kwh',   kwh);
+  set('kpi-cost',  'R$ ' + cost);
+  set('kpi-devs',  n + ' / ' + n);
+  updateMeter(totalW);
+}
+
+function resetKPIs() {
+  set('kpi-watts','— W'); set('kpi-kwh','—');
+  set('kpi-cost','—');    set('kpi-devs','0 / 0');
+  updateMeter(0);
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Medidor radial ───────────────────────────────────────────────────
+function updateMeter(watts) {
+  const pct  = Math.min(100, Math.round((watts / 5000) * 100));
+  const circ = 421;
+  const ring = document.getElementById('meter-ring');
+  const pctEl= document.getElementById('meter-pct');
+  const lbl  = document.getElementById('meter-lbl');
+
+  ring.style.strokeDasharray  = circ;
+  ring.style.strokeDashoffset = circ - (pct / 100) * circ;
+  pctEl.textContent = pct + '%';
+
+  const theme =
+    pct === 0  ? {c:'#6378ff', cls:'badge-blue', t:'Aguardando dados'} :
+    pct < 40   ? {c:'#4ade80', cls:'badge-green', t:'✓ Normal'} :
+    pct < 70   ? {c:'#fbbf24', cls:'badge-amber', t:'⚠ Elevado'} :
+                 {c:'#f87171', cls:'badge-red',   t:'✗ Crítico'};
+
+  ring.style.stroke  = theme.c;
+  ring.style.filter  = pct > 0 ? `drop-shadow(0 0 10px ${theme.c})` : 'none';
+  pctEl.style.color  = theme.c;
+  pctEl.style.textShadow = pct > 0 ? `0 0 20px ${theme.c}66` : 'none';
+  lbl.className = 'badge ' + theme.cls + ' mt-4';
+  lbl.textContent = theme.t;
+}
+
+// ── Devices list ─────────────────────────────────────────────────────
+function renderDevList() {
+  const el  = document.getElementById('dev-list');
+  const bdg = document.getElementById('dev-badge');
+  if (state.devices.length === 0) {
+    bdg.textContent = '0 online';
+    el.innerHTML = `<div class="empty">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="M9 7h6M9 11h6M9 15h4"/>
+      </svg><p>Nenhum dispositivo.<br/>Cadastre na aba 🔌.</p></div>`;
+    return;
+  }
+  bdg.textContent = state.devices.length + ' online';
+  el.innerHTML = state.devices.map((d,i) => {
+    const pct = Math.min(100, Math.round((d.watts / 1500) * 100));
+    const bc  = pct > 70 ? 'var(--red)' : pct > 40 ? 'var(--amber)' : 'var(--blue)';
+    return `<div class="dev-row" style="opacity:0;animation:rise 0.4s ${i*.07}s forwards;">
+      <span style="font-size:1.05rem;min-width:22px;text-align:center;">${ICONS[d.loc]||'🔌'}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:0.8rem;font-weight:600;color:var(--text);">${d.nome}</span>
+          <span class="mono" style="font-size:0.72rem;color:${bc};">${d.watts} W</span>
+        </div>
+        <div class="bar-track" style="height:3px;">
+          <div class="bar-fill" style="width:${pct}%;background:${bc};box-shadow:0 0 5px ${bc}55;"></div>
+        </div>
+      </div>
+      <span class="dot dot-blue"></span>
+    </div>`;
+  }).join('');
+}
+
+// ── Log ───────────────────────────────────────────────────────────────
+function addLog(type, msg) {
+  const ts = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logData.unshift({ type, msg, ts });
+  if (logData.length > 60) logData.pop();
+  const colors = { success:'var(--green)', info:'var(--blue)', warn:'var(--amber)', error:'var(--red)', action:'var(--violet)' };
+  const c = document.getElementById('event-log');
+  document.getElementById('log-badge').textContent = logData.length + ' eventos';
+  c.innerHTML = logData.slice(0,14).map(l =>
+    `<div class="log-line" style="color:${colors[l.type]||'var(--muted)'};">
+      <span style="color:var(--dim);">[${l.ts}]</span> ${l.msg}</div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 📊 CADASTRO
+// ══════════════════════════════════════════════════════════════════════
+
+function getCadPayload() {
+  const nome  = (document.getElementById('f-name').value||'').trim();
+  const watts = parseFloat(document.getElementById('f-watts').value)||null;
+  const loc   = document.getElementById('f-loc').value||'—';
+  const tens  = document.getElementById('f-tensao').value||'220';
+  const kwh8  = watts ? parseFloat((watts/1000*8).toFixed(3)) : null;
+  return {
+    tipo:'cadastro_dispositivo', timestamp:new Date().toISOString(),
+    origem:'SmartPlug AI — Dashboard',
+    dispositivo: {
+      nome:nome||'—', potencia_watts:watts, tensao_v:parseInt(tens),
+      localizacao:loc, consumo_estimado_8h_kwh:kwh8,
+      custo_estimado_8h_brl: kwh8 ? parseFloat((kwh8*0.92).toFixed(2)) : null,
+      id_sessao:'dev_'+Date.now()
+    },
+    instrucao_ia:'Classifique o impacto energético (baixo/médio/alto) e sugira horários ideais.'
+  };
+}
+
+function refreshCadPreview() {
+  clearCadErrors();
+  document.getElementById('cad-preview').textContent = JSON.stringify(getCadPayload(), null, 2);
+}
+
+function copyCadPayload() {
+  navigator.clipboard.writeText(JSON.stringify(getCadPayload(), null, 2))
+    .then(()=>toast('Payload copiado!','info'))
+    .catch(()=>toast('Erro ao copiar','error'));
+}
+
+function validateCad() {
+  let ok = true;
+  if (!document.getElementById('f-name').value.trim()) { document.getElementById('wrap-name').classList.add('invalid'); ok=false; }
+  const w = document.getElementById('f-watts').value;
+  if (!w||parseFloat(w)<=0) { document.getElementById('wrap-watts').classList.add('invalid'); ok=false; }
+  if (!document.getElementById('f-loc').value) { document.getElementById('wrap-loc').classList.add('invalid'); ok=false; }
+  return ok;
+}
+function clearCadErrors() {
+  ['wrap-name','wrap-watts','wrap-loc'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+}
+
+async function cadastrarDispositivo() {
+  clearCadErrors();
+  if (!validateCad()) { toast('Preencha todos os campos.','warn'); return; }
+
+  const btn = document.getElementById('btn-cad');
+  const txt = document.getElementById('btn-cad-txt');
+  const st  = document.getElementById('cad-status');
+  btn.disabled = true; txt.textContent = 'Cadastrando...';
+  st.style.color = 'var(--muted)'; st.textContent = 'aguardando...';
+
+  const p = getCadPayload();
+  const { nome, potencia_watts, localizacao } = p.dispositivo;
+
+  try {
+    if (URL_WEBHOOK_MAKE && URL_WEBHOOK_MAKE.startsWith('http')) {
+      const res = await fetch(URL_WEBHOOK_MAKE, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      st.style.color = 'var(--green)'; st.textContent = '✓ Cadastrado com sucesso';
+      addLog('success', `Dispositivo cadastrado: ${nome} (${potencia_watts}W)`);
+    } else {
+      await new Promise(r=>setTimeout(r,900));
+      st.style.color = 'var(--blue)'; st.textContent = '✓ Salvo localmente';
+      addLog('info', `Cadastro local: ${nome} (${potencia_watts}W)`);
+    }
+
+    state.devices.push({ nome, watts:potencia_watts, loc:localizacao, id:p.dispositivo.id_sessao, ts:new Date().toLocaleTimeString('pt-BR') });
+    refreshKPIs(); renderDevList(); renderSessionList();
+    showCadBanner(nome, potencia_watts, localizacao);
+    toast(`"${nome}" cadastrado com sucesso`, 'success');
+    document.getElementById('waiting-banner').style.display = 'none';
+    clearCadForm(false);
+
+  } catch(err) {
+    st.style.color = 'var(--red)'; st.textContent = '✗ ' + err.message;
+    addLog('error','Cadastro falhou: '+err.message);
+    toast('Erro: '+err.message,'error');
+  } finally {
+    btn.disabled = false; txt.textContent = 'Cadastrar Dispositivo';
+  }
+}
+
+function showCadBanner(nome, watts, loc) {
+  const wrap = document.getElementById('cad-success-banner');
+  wrap.innerHTML = `
+    <div style="margin-top:18px;padding:16px 20px;border-radius:12px;
+      background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.25);
+      display:flex;align-items:flex-start;gap:14px;opacity:0;animation:rise 0.5s 0.1s forwards;">
+      <div style="width:32px;height:32px;min-width:32px;border-radius:50%;
+        background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.4);
+        display:flex;align-items:center;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2.5 7l3 3 6-6" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:0.9rem;font-weight:600;color:#4ade80;margin-bottom:4px;">
+          Dispositivo enviado para análise da IA
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);line-height:1.65;">
+          <span style="color:var(--text);">${nome}</span> · ${watts}W · ${loc}
+        </div>
+      </div>
+      <button onclick="document.getElementById('cad-success-banner').innerHTML=''"
+        style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0;">✕</button>
+    </div>`;
+  setTimeout(()=>{
+    const el=wrap.firstElementChild;
+    if(el){el.style.transition='opacity 0.5s';el.style.opacity='0';setTimeout(()=>wrap.innerHTML='',500);}
+  },6000);
+}
+
+function renderSessionList() {
+  const sec  = document.getElementById('session-section');
+  const list = document.getElementById('session-list');
+  const bdg  = document.getElementById('sess-badge');
+  if (state.devices.length === 0) { sec.style.display='none'; return; }
+  sec.style.display = 'block'; bdg.textContent = state.devices.length;
+  const imp = w => w>1500 ? {l:'ALTO',cls:'badge-red'} : w>500 ? {l:'MÉDIO',cls:'badge-amber'} : {l:'BAIXO',cls:'badge-green'};
+  list.innerHTML = state.devices.map((d,i)=>{
+    const im=imp(d.watts); const cost=((d.watts/1000)*8*30*0.92).toFixed(2);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;
+      border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.5);
+      opacity:0;animation:rise 0.4s ${i*.06}s forwards;">
+      <span style="font-size:1rem;">${ICONS[d.loc]||'🔌'}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+          <span style="font-size:0.8rem;font-weight:600;color:var(--text);">${d.nome}</span>
+          <span class="badge ${im.cls}">${im.l}</span>
+        </div>
+        <div style="font-size:0.65rem;color:var(--muted);">${d.watts}W · ${d.loc} · ~R$ ${cost}/mês</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:0.58rem;color:var(--dim);">${d.ts}</div>
+        <div style="font-size:0.58rem;color:var(--green);margin-top:2px;">✓ enviado</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearCadForm(resetStatus=true) {
+  document.getElementById('f-name').value='';
+  document.getElementById('f-watts').value='';
+  document.getElementById('f-loc').value='';
+  clearCadErrors();
+  if(resetStatus){ document.getElementById('cad-status').textContent=''; document.getElementById('cad-success-banner').innerHTML=''; }
+  refreshCadPreview();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 📡 SIMULADOR DE TELEMETRIA
+// ══════════════════════════════════════════════════════════════════════
+
+function buildTelePayload() {
+  const nome = (document.getElementById('f-name').value||'').trim() || 'Aparelho de Teste';
+  const consumo_w = Math.floor(Math.random()*(2500-100+1))+100;
+  return {
+    tipo:'telemetria_iot',
+    dispositivo: nome,
+    voltagem: 220,
+    consumo_w,
+    status: 'Ativo',
+    timestamp: new Date().toISOString(),
+    metadata: {
+      origem:'SmartPlug AI — Simulador IoT',
+      corrente_a: parseFloat((consumo_w/220).toFixed(2)),
+      fator_potencia: 0.92,
+      kwh_estimado_hora: parseFloat((consumo_w/1000).toFixed(3))
+    }
+  };
+}
+
+async function simularTelemetria() {
+  const btn    = document.getElementById('btn-tele');
+  const btnTxt = document.getElementById('tele-btn-txt');
+  const btnIc  = document.getElementById('tele-btn-ic');
+  const dot    = document.getElementById('tele-dot');
+
+  const setLoading = (msg) => {
+    btn.disabled=true;
+    btn.style.background='linear-gradient(135deg,#7c3aed,#5b21b6)';
+    btn.style.boxShadow='none';
+    btnTxt.textContent=msg;
+    btnIc.innerHTML=`<circle cx="7.5" cy="7.5" r="5" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-dasharray="14 8"
+      style="animation:spin 0.85s linear infinite;transform-origin:center;"/>`;
+  };
+  const setReady = () => {
+    btn.disabled=false;
+    btn.style.background='linear-gradient(135deg,#a855f7,#7c3aed)';
+    btn.style.boxShadow='0 0 24px rgba(168,85,247,0.35),0 4px 16px rgba(0,0,0,0.4)';
+    btnTxt.textContent='Simular Telemetria';
+    btnIc.innerHTML=`<path d="M8 2v3M8 11v3M2 8h3M11 8h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/>`;
+  };
+
+  setLoading('Enviando telemetria...');
+  setTeleStatus('sending','⏳ Enviando telemetria...');
+  iaStateThinking(); // limpa o card e exibe spinner
+  dot.style.background='var(--amber)'; dot.style.boxShadow='0 0 6px var(--amber)';
+
+  const payload = buildTelePayload();
+  tele.last = payload;
+  document.getElementById('tele-preview').textContent = JSON.stringify(payload, null, 2);
+
+  // Atualiza KPIs imediatamente
+  const w = payload.consumo_w;
+  set('kpi-watts', w + ' W');
+  set('kpi-watts-sub','leitura ao vivo · telemetria');
+  set('kpi-cost','R$ ' + (w/1000*0.92).toFixed(2));
+  set('kpi-cost-sub', `(${w} ÷ 1000) × 0,92`);
+  updateMeter(w);
+  document.getElementById('waiting-banner').style.display='none';
+
+  try {
+    // ── FASE 1: POST ──────────────────────────────────────────────
+    const res = await fetch(URL_WEBHOOK_MAKE, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+
+    setTeleStatus('ok','✅ Dados recebidos pela automação!');
+    addLog('success',`Telemetria enviada — ${payload.dispositivo} · ${w}W`);
+
+    // ── FASE 2: lê resposta e captura "analisar" ──────────────────
+    setLoading('Processando...');
+    setTeleStatus('sending','⏳ IA processando resposta...');
+
+    let insightText = null;
+    try {
+      const raw = await res.text();
+      if (raw && raw.trim()) {
+        try {
+          const parsed = JSON.parse(raw);
+          // ← Campo principal: "analisar"
+          const fields = ['analisar','insight','message','texto','resultado','resposta','output','text','analysis'];
+          for (const f of fields) {
+            if (parsed[f] && typeof parsed[f]==='string') { insightText=parsed[f]; break; }
+          }
+          if (!insightText) insightText = JSON.stringify(parsed, null, 2);
+        } catch { insightText = raw.trim(); }
+      }
+    } catch { /* ignora */ }
+
+    iaStateResult(insightText, payload.dispositivo, w);
+    toast(`Leitura enviada: ${w}W · resposta da IA recebida`, 'success');
+
+  } catch(err) {
+    setTeleStatus('err','✗ Falha: '+err.message);
+    addLog('error','Telemetria falhou: '+err.message);
+    iaStateError(err.message);
+    toast('Erro no envio: '+err.message,'error');
+    dot.style.background='var(--red)'; dot.style.boxShadow='0 0 6px var(--red)';
+  } finally {
+    setReady();
+    tele.count++;
+    tele.history.unshift({ n:tele.count, device:payload.dispositivo, w, ts:new Date().toLocaleTimeString('pt-BR') });
+    if (tele.history.length>20) tele.history.pop();
+    renderTeleHistory();
+    dot.style.background='var(--blue)'; dot.style.boxShadow='0 0 8px var(--blue)'; dot.style.animation='pulseDot 2s infinite';
+    // Shimmer
+    const sh=document.getElementById('sim-shimmer');
+    sh.style.transition='transform 0.5s'; sh.style.transform='translateX(100%)';
+    setTimeout(()=>{sh.style.transition='none';sh.style.transform='translateX(-100%)';},550);
+  }
+}
+
+// ── Estados do card IA Insight ────────────────────────────────────────
+function iaStateClear() {
+  // Para qualquer typewriter ativo
+  const t = document.getElementById('ia-text');
+  if (t._ti) { clearInterval(t._ti); t._ti = null; }
+  t.textContent = '';
+  document.getElementById('ia-badge').style.display = 'none';
+  document.getElementById('ia-ts').textContent = '';
+}
+
+function iaStateThinking() {
+  iaStateClear();
+  const wrap = document.getElementById('ia-icon-wrap');
+  wrap.style.background = 'rgba(99,120,255,0.12)';
+  wrap.style.border      = '1px solid rgba(99,120,255,0.3)';
+  document.getElementById('ia-icon-static').style.display = 'none';
+  document.getElementById('ia-icon-spin').style.display   = 'block';
+
+  document.getElementById('ia-state-idle').style.display    = 'none';
+  document.getElementById('ia-state-thinking').style.display= 'flex';
+  document.getElementById('ia-state-result').style.display  = 'none';
+  document.getElementById('ia-state-error').style.display   = 'none';
+}
+
+function iaStateResult(text, device, watts) {
+  const wrap = document.getElementById('ia-icon-wrap');
+  wrap.style.background = 'rgba(74,222,128,0.1)';
+  wrap.style.border      = '1px solid rgba(74,222,128,0.3)';
+  document.getElementById('ia-icon-static').style.display = 'block';
+  document.getElementById('ia-icon-spin').style.display   = 'none';
+
+  document.getElementById('ia-state-idle').style.display    = 'none';
+  document.getElementById('ia-state-thinking').style.display= 'none';
+  document.getElementById('ia-state-result').style.display  = 'block';
+  document.getElementById('ia-state-error').style.display   = 'none';
+
+  const hasText = text && text.trim().length > 0;
+  const display = hasText ? text : `Leitura recebida — ${device} · ${watts}W · R$ ${(watts/1000*0.92).toFixed(2)}/h`;
+
+  // Badge e timestamp
+  const badge = document.getElementById('ia-badge');
+  badge.style.display = 'inline-flex';
+  document.getElementById('ia-ts').textContent = new Date().toLocaleTimeString('pt-BR');
+
+  // Typewriter
+  const el = document.getElementById('ia-text');
+  el.textContent = '';
+  let i = 0;
+  const speed = Math.max(10, Math.min(28, 1800 / display.length));
+  el._ti = setInterval(() => {
+    if (i >= display.length) { clearInterval(el._ti); el._ti=null; return; }
+    el.textContent += display[i++];
+  }, speed);
+
+  addLog('success', `IA Insight recebido: ${display.slice(0,60)}${display.length>60?'…':''}`);
+}
+
+function iaStateError(msg) {
+  document.getElementById('ia-icon-static').style.display = 'block';
+  document.getElementById('ia-icon-spin').style.display   = 'none';
+  document.getElementById('ia-state-idle').style.display    = 'none';
+  document.getElementById('ia-state-thinking').style.display= 'none';
+  document.getElementById('ia-state-result').style.display  = 'none';
+  document.getElementById('ia-state-error').style.display   = 'block';
+  document.getElementById('ia-error-text').textContent = '✗ Erro na comunicação: ' + msg;
+}
+
+function setTeleStatus(state, msg) {
+  const el = document.getElementById('tele-status-line');
+  const map = {
+    sending:{ bg:'rgba(251,191,36,0.1)',   border:'rgba(251,191,36,0.3)',  color:'var(--amber)' },
+    ok:     { bg:'rgba(74,222,128,0.1)',   border:'rgba(74,222,128,0.3)', color:'var(--green)' },
+    err:    { bg:'rgba(248,113,113,0.1)',  border:'rgba(248,113,113,0.3)',color:'var(--red)'   },
+  };
+  const cfg = map[state]||map.ok;
+  el.style.cssText = `display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;
+    font-size:0.72rem;font-family:'JetBrains Mono',monospace;transition:all 0.3s;
+    background:${cfg.bg};border:1px solid ${cfg.border};color:${cfg.color};`;
+  el.textContent = msg;
+}
+
+function renderTeleHistory() {
+  const wrap  = document.getElementById('tele-history-wrap');
+  const list  = document.getElementById('tele-history');
+  const badge = document.getElementById('tele-count-badge');
+  if (tele.history.length === 0) { wrap.style.display='none'; badge.style.display='none'; return; }
+  wrap.style.display='block'; badge.style.display='inline-flex';
+  badge.textContent = tele.count + (tele.count===1?' leitura':' leituras');
+  list.innerHTML = tele.history.map((h,i)=>{
+    const bc = h.w>1800?'var(--red)':h.w>900?'var(--amber)':'var(--blue)';
+    const pct= Math.round((h.w/2500)*100);
+    return `<div class="tele-row" style="opacity:0;animation:rise 0.35s ${i*.04}s forwards;">
+      <span class="mono" style="font-size:0.6rem;color:var(--dim);min-width:28px;text-align:right;">#${String(tele.count-i).padStart(2,'0')}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:0.7rem;color:var(--muted);">${h.device}</span>
+          <span class="mono" style="font-size:0.72rem;font-weight:700;color:${bc};">${h.w} W</span>
+        </div>
+        <div class="bar-track" style="height:2px;">
+          <div class="bar-fill" style="width:${pct}%;background:${bc};box-shadow:0 0 4px ${bc}55;"></div>
+        </div>
+      </div>
+      <span style="font-size:0.58rem;color:var(--dim);white-space:nowrap;">${h.ts}</span>
+    </div>`;
+  }).join('');
+}
+
+function copyTelePayload() {
+  if (!tele.last) { toast('Gere uma leitura primeiro','warn'); return; }
+  navigator.clipboard.writeText(JSON.stringify(tele.last,null,2))
+    .then(()=>toast('Payload copiado!','info'))
+    .catch(()=>toast('Erro ao copiar','error'));
+}
+
+function resetTelemetria() {
+  tele.count=0; tele.history=[]; tele.last=null;
+  document.getElementById('tele-preview').textContent='Clique em "Simular Telemetria" para gerar a primeira leitura...';
+  document.getElementById('tele-status-line').style.cssText='display:inline-flex;background:transparent;border:none;';
+  document.getElementById('tele-status-line').textContent='';
+  const dot=document.getElementById('tele-dot');
+  dot.style.background='var(--dim)'; dot.style.boxShadow='none'; dot.style.animation='none';
+  renderTeleHistory();
+  addLog('info','Histórico de telemetria resetado');
+  toast('Histórico limpo','info');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toasts');
+  const el   = document.createElement('div');
+  const icon = {success:'✅',error:'✗',warn:'⚠',info:'ℹ'}[type]||'ℹ';
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.35s'; setTimeout(()=>el.remove(),350); },3500);
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────
+function set(id,val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+
+// ── Init ──────────────────────────────────────────────────────────────
+refreshCadPreview();
+updateMeter(0);
+addLog('info','SmartPlug AI inicializado');
+addLog('info','Aguardando dados — use o Simulador para enviar telemetria');
+</script>
+</body>
+</html>
