@@ -485,6 +485,9 @@ body::after {
 
     <!-- Conteúdo do insight -->
     <div id="ia-content" style="padding-left:46px;">
+      <div id="iaResultado" style="font-size:0.82rem;line-height:1.75;color:var(--text);font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word;">
+       Aguardando primeira leitura de telemetria...
+      </div> 
 
       <!-- Estado: aguardando -->
       <div id="ia-state-idle" style="font-size:0.78rem;color:var(--dim);font-style:italic;">
@@ -1371,26 +1374,23 @@ addLog('info','Aguardando dados — use o Simulador para enviar telemetria');
 </script>
 
 <script>
-  async function carregarAnaliseIA() {
-    try {
-      const resposta = await fetch("/api/energia");
+async function carregarAnaliseIA() {
+  try {
+    const resposta = await fetch("/api/energia");
     const dados = await resposta.json();
 
-    // ⚠️ Agora usamos o sistema correto do site
-    if (dados.resultado) {
-      iaStateResult(dados.resultado, "Make.com", 0);
+    const campoIA = document.getElementById("iaResultado");
+
+    if (campoIA && dados.resultado) {
+      campoIA.innerText = dados.resultado.replace(/\\n/g, "\n");
     }
 
   } catch (erro) {
     console.error("Erro ao buscar análise da IA:", erro);
-    iaStateError("Erro ao buscar dados da API");
   }
 }
 
-// primeira execução
 carregarAnaliseIA();
-
-// atualiza a cada 5 segundos
 setInterval(carregarAnaliseIA, 5000);
 </script>
 </body>
