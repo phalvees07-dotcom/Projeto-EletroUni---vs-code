@@ -507,9 +507,10 @@ body::after {
       </div>
 
       <!-- Estado: resultado -->
-      <div id="ia-state-result" style="display:none;">
-        <div id="ia-text" style="font-size:0.82rem;line-height:1.75;color:var(--text);
-          font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word;"></div>
+      <div id="ia-state-result">
+       <div id="ia-text">
+         Aguardando primeira leitura de telemetria...
+       </div>
       </div>
 
       <!-- Estado: erro -->
@@ -1408,5 +1409,11 @@ async function carregarAnaliseIA() {
 carregarAnaliseIA();
 setInterval(carregarAnaliseIA, 5000);
 </script>
+
+<script>
+console.log("SCRIPT NOVO RODANDO");
+</script>
+
+
 </body>
 </html>
