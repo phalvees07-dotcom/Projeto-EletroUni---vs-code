@@ -488,7 +488,7 @@ body::after {
 
       <!-- Estado: aguardando -->
       <div id="ia-state-idle" style="font-size:0.78rem;color:var(--dim);font-style:italic;">
-        Aguardando primeira leitura de telemetria...
+         <p id="iaResultado">Aguardando primeira leitura de telemetria...</p>
       </div>
 
       <!-- Estado: processando -->
@@ -1369,5 +1369,30 @@ updateMeter(0);
 addLog('info','SmartPlug AI inicializado');
 addLog('info','Aguardando dados — use o Simulador para enviar telemetria');
 </script>
+
+<script>
+  async function carregarAnaliseIA() {
+    try {
+      const resposta = await fetch("/api/energia");
+    const dados = await resposta.json();
+
+    // ⚠️ Agora usamos o sistema correto do site
+    if (dados.resultado) {
+      iaStateResult(dados.resultado, "Make.com", 0);
+    }
+
+  } catch (erro) {
+    console.error("Erro ao buscar análise da IA:", erro);
+    iaStateError("Erro ao buscar dados da API");
+  }
+}
+
+// primeira execução
+carregarAnaliseIA();
+
+// atualiza a cada 5 segundos
+setInterval(carregarAnaliseIA, 5000);
+</script>
+
 </body>
 </html>
