@@ -1376,13 +1376,28 @@ addLog('info','Aguardando dados — use o Simulador para enviar telemetria');
 <script>
 async function carregarAnaliseIA() {
   try {
-    const resposta = await fetch("/api/energia");
+    const resposta = await fetch("/api/energia?t=" + Date.now());
     const dados = await resposta.json();
 
-    const campoIA = document.getElementById("iaResultado");
+    console.log("Resposta da API:", dados);
 
-    if (campoIA && dados.resultado) {
-      campoIA.innerText = dados.resultado.replace(/\\n/g, "\n");
+    if (!dados.resultado) return;
+
+    const textoLimpo = dados.resultado.replace(/\\n/g, "\n");
+
+    const idle = document.getElementById("ia-state-idle");
+    const thinking = document.getElementById("ia-state-thinking");
+    const result = document.getElementById("ia-state-result");
+    const error = document.getElementById("ia-state-error");
+    const iaText = document.getElementById("ia-text");
+
+    if (idle) idle.style.display = "none";
+    if (thinking) thinking.style.display = "none";
+    if (error) error.style.display = "none";
+    if (result) result.style.display = "block";
+
+    if (iaText) {
+      iaText.textContent = textoLimpo;
     }
 
   } catch (erro) {
