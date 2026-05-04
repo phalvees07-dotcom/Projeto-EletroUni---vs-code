@@ -1,1419 +1,1568 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8"/>
+<meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SmartPlug AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>smartplug ai</title>
+<link href="https://fonts.googleapis.com/css2?family=space+grotesk:wght@300;400;500;600;700;800&family=jetbrains+mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <style>
+/* ═══════════════════════════════════════════ tokens ═══════════════════════════════════════════ */
 :root {
-  --bg:        #05070f;
-  --surface:   rgba(12,16,32,0.7);
-  --surface2:  rgba(18,24,48,0.8);
-  --border:    rgba(99,120,255,0.15);
-  --border-hi: rgba(99,120,255,0.4);
-  --blue:      #6378ff;
-  --violet:    #a855f7;
-  --cyan:      #22d3ee;
-  --green:     #4ade80;
-  --amber:     #fbbf24;
-  --red:       #f87171;
-  --text:      #e2e8f0;
-  --muted:     #64748b;
-  --dim:       #334155;
+  --bg:       #04060e;
+  --bg2:      #070a16;
+  --surf:     rgba(10,14,30,0.75);
+  --surf2:    rgba(14,18,40,0.85);
+  --b:        rgba(99,120,255,0.14);
+  --bhi:      rgba(99,120,255,0.38);
+  --blue:     #6378ff;
+  --blue2:    #4f68e8;
+  --violet:   #a855f7;
+  --violet2:  #7c3aed;
+  --cyan:     #22d3ee;
+  --green:    #4ade80;
+  --amber:    #fbbf24;
+  --red:      #f87171;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --dim:      #1e293b;
+  --r:        14px;
+  --r-sm:     10px;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg);
-  font-family: 'Space Grotesk', sans-serif;
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  font-family:'space grotesk',sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
 }
-
-/* ── Mesh background ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+/* mesh */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 80% 50% at 10% 0%,   rgba(99,120,255,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 100%,  rgba(168,85,247,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 50% 50%,   rgba(34,211,238,0.05) 0%, transparent 70%);
+    radial-gradient(ellipse 90% 55% at 5% 0%,   rgba(99,120,255,.13) 0%,transparent 60%),
+    radial-gradient(ellipse 65% 45% at 95% 100%, rgba(168,85,247,.11) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 35% at 50% 50%,  rgba(34,211,238,.05) 0%,transparent 70%);
 }
-
 /* grid */
-body::after {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:
-    linear-gradient(rgba(99,120,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99,120,255,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(rgba(99,120,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(99,120,255,.035) 1px,transparent 1px);
+  background-size:52px 52px;
 }
 
-/* ── Glass card ── */
-.glass {
-  background: var(--surface);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+/* ═══════════ layout ═══════════ */
+.z{position:relative;z-index:10}
+
+/* ═══════════ glass cards ═══════════ */
+.glass{
+background:var(–surf);
+backdrop-filter:blur(22px) saturate(1.5);
+-webkit-backdrop-filter:blur(22px) saturate(1.5);
+border:1px solid var(–b);
+border-radius:var(–r);
 }
-.glass-hi {
-  background: var(--surface2);
-  backdrop-filter: blur(24px) saturate(1.6);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  border: 1px solid var(--border-hi);
-  border-radius: 16px;
+.glass-hi{
+background:var(–surf2);
+backdrop-filter:blur(26px) saturate(1.6);
+-webkit-backdrop-filter:blur(26px) saturate(1.6);
+border:1px solid var(–bhi);
+border-radius:var(–r);
 }
 
-/* ── Typography ── */
-.mono { font-family: 'JetBrains Mono', monospace; }
-.label { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
-
-/* ── Glow effects ── */
-.glow-blue   { text-shadow: 0 0 20px rgba(99,120,255,0.7); }
-.glow-violet { text-shadow: 0 0 20px rgba(168,85,247,0.7); }
-.glow-cyan   { text-shadow: 0 0 16px rgba(34,211,238,0.6); }
-.glow-green  { text-shadow: 0 0 16px rgba(74,222,128,0.6); }
-
-.shadow-blue   { box-shadow: 0 0 30px rgba(99,120,255,0.2), 0 8px 32px rgba(0,0,0,0.5); }
-.shadow-violet { box-shadow: 0 0 30px rgba(168,85,247,0.2), 0 8px 32px rgba(0,0,0,0.5); }
-
-/* ── Tabs ── */
-.tab-bar {
-  display: flex; gap: 4px;
-  background: rgba(8,11,24,0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  position: sticky; top: 56px; z-index: 40;
-  overflow-x: auto;
+/* ═══════════ typography ═══════════ */
+.mono{font-family:‘jetbrains mono’,monospace}
+.label{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(–muted)}
+.grad-text{
+background:linear-gradient(90deg,var(–blue),var(–violet));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.tab-bar::-webkit-scrollbar { display: none; }
-
-.tab-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 14px 18px;
-  font-size: 0.8rem; font-weight: 500;
-  color: var(--muted);
-  border: none; background: none; cursor: pointer;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color 0.2s, border-color 0.2s;
-  flex-shrink: 0;
-}
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active {
-  color: var(--blue);
-  border-bottom-color: var(--blue);
-}
-.tab-btn .tab-emoji { font-size: 0.95rem; }
-
-.tab-pane { display: none; }
-.tab-pane.active { display: block; animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1); }
-
-/* ── KPI cards ── */
-.kpi-card {
-  padding: 20px 22px;
-  position: relative; overflow: hidden;
-}
-.kpi-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent, var(--blue)), transparent);
-  opacity: 0.6;
-}
-.kpi-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.9rem; font-weight: 700;
-  line-height: 1; margin: 8px 0 4px;
-  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
-}
-.kpi-sub { font-size: 0.65rem; color: var(--muted); }
-
-/* ── Insight card ── */
-.insight-card {
-  padding: 22px 24px;
-  position: relative; overflow: hidden;
-  min-height: 90px;
-}
-.insight-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
-  background: linear-gradient(180deg, var(--blue), var(--violet));
-  border-radius: 0 0 0 16px;
+.grad-text2{
+background:linear-gradient(90deg,var(–cyan),var(–blue));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 
-/* ── IA Thinking animation ── */
-.thinking-dots span {
-  display: inline-block;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--blue);
-  animation: dotBounce 1.2s ease-in-out infinite;
-  margin: 0 2px;
+/* ═══════════ buttons ═══════════ */
+.btn{
+display:inline-flex;align-items:center;justify-content:center;gap:8px;
+padding:12px 22px;border-radius:var(–r-sm);border:none;cursor:pointer;
+font-family:‘space grotesk’,sans-serif;font-size:.82rem;font-weight:600;letter-spacing:.03em;
+transition:transform .15s,box-shadow .2s,opacity .15s;
+white-space:nowrap;position:relative;overflow:hidden;
 }
-.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+.btn:hover{transform:translatey(-2px)}
+.btn:active{transform:translatey(0)}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none!important}
+.btn-grad{
+background:linear-gradient(135deg,var(–blue),var(–violet));
+color:#fff;
+box-shadow:0 0 26px rgba(99,120,255,.35),0 4px 18px rgba(0,0,0,.45);
+}
+.btn-grad:hover{box-shadow:0 0 40px rgba(99,120,255,.55),0 6px 22px rgba(0,0,0,.5)}
+.btn-grad2{
+background:linear-gradient(135deg,var(–violet),var(–violet2));
+color:#fff;
+box-shadow:0 0 22px rgba(168,85,247,.3),0 4px 16px rgba(0,0,0,.4);
+}
+.btn-outline{
+background:transparent;color:var(–muted);
+border:1px solid var(–b);
+}
+.btn-outline:hover{color:var(–text);border-color:var(–bhi)}
+.btn-green{
+background:rgba(74,222,128,.12);color:var(–green);
+border:1px solid rgba(74,222,128,.3);
+}
+.btn-green:hover{background:rgba(74,222,128,.2);box-shadow:0 0 16px rgba(74,222,128,.25)}
+.btn-red{
+background:rgba(248,113,113,.1);color:var(–red);
+border:1px solid rgba(248,113,113,.28);
+}
+.btn-red:hover{background:rgba(248,113,113,.18)}
+.btn-sm{padding:7px 14px;font-size:.74rem}
+.btn-xs{padding:5px 11px;font-size:.68rem}
+/* shimmer */
+.btn::after{
+content:’’;position:absolute;inset:0;
+background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.12) 50%,transparent 60%);
+transform:translatex(-100%);transition:transform 0s;
+}
+.btn:hover::after{transform:translatex(100%);transition:transform .5s}
 
-/* ── Forms ── */
-.field { display: flex; flex-direction: column; gap: 7px; }
-.field label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.field input, .field select {
-  background: rgba(8,11,24,0.8);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem; border-radius: 10px;
-  padding: 12px 15px; outline: none; width: 100%;
-  transition: border-color 0.2s, box-shadow 0.2s;
+/* ═══════════ inputs ═══════════ */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(–muted)}
+.field input,.field select{color:#fff!important;
+background:rgba(4,6,14,.85);
+border:1px solid var(–b);
+color:var(–text);
+font-family:‘jetbrains mono’,monospace;
+font-size:.83rem;border-radius:var(–r-sm);
+padding:11px 14px;outline:none;width:100%;
+transition:border-color .2s,box-shadow .2s;
 }
-.field input:focus, .field select:focus {
-  border-color: rgba(99,120,255,0.5);
-  box-shadow: 0 0 0 3px rgba(99,120,255,0.1);
+.field input:focus,.field select:focus{
+border-color:rgba(99,120,255,.5);
+box-shadow:0 0 0 3px rgba(99,120,255,.1);
 }
-.field input::placeholder { color: var(--dim); }
-.field .err { font-size: 0.63rem; color: var(--red); display: none; }
-.field.invalid input, .field.invalid select { border-color: rgba(248,113,113,0.5); }
-.field.invalid .err { display: block; }
+.field input::placeholder{color:var(–dim)}
+.field input[type=password]{letter-spacing:.1em}
+.field .err{font-size:.62rem;color:var(–red);display:none;margin-top:2px}
+.field.invalid input,.field.invalid select{border-color:rgba(248,113,113,.5)}
+.field.invalid .err{display:block}
 
-/* ── Buttons ── */
-.btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 12px 24px; border-radius: 10px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
-  border: none; cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+/* ═══════════ badges ═══════════ */
+.badge{
+display:inline-flex;align-items:center;
+padding:2px 9px;border-radius:20px;
+font-size:.6rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase
 }
-.btn:hover  { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.badge-blue  {background:rgba(99,120,255,.14); color:var(–blue);  border:1px solid rgba(99,120,255,.28)}
+.badge-violet{background:rgba(168,85,247,.14); color:var(–violet);border:1px solid rgba(168,85,247,.28)}
+.badge-green {background:rgba(74,222,128,.14); color:var(–green); border:1px solid rgba(74,222,128,.28)}
+.badge-amber {background:rgba(251,191,36,.14); color:var(–amber); border:1px solid rgba(251,191,36,.28)}
+.badge-red   {background:rgba(248,113,113,.14);color:var(–red);   border:1px solid rgba(248,113,113,.28)}
+.badge-cyan  {background:rgba(34,211,238,.14); color:var(–cyan);  border:1px solid rgba(34,211,238,.28)}
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--blue), #4f68e8);
-  color: #fff;
-  box-shadow: 0 0 24px rgba(99,120,255,0.35), 0 4px 16px rgba(0,0,0,0.4);
-}
-.btn-primary:hover { box-shadow: 0 0 36px rgba(99,120,255,0.55), 0 6px 20px rgba(0,0,0,0.5); }
+/* ═══════════ dots ═══════════ */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-blue  {background:var(–blue);  animation:pdot 2s infinite;box-shadow:0 0 7px var(–blue)}
+.dot-green {background:var(–green); animation:pdot 2s infinite;box-shadow:0 0 7px var(–green)}
+.dot-violet{background:var(–violet);animation:pdot 2s infinite;box-shadow:0 0 7px var(–violet)}
+.dot-amber {background:var(–amber)}
+.dot-dim   {background:var(–dim)}
 
-.btn-sim {
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
-  color: #fff;
-  box-shadow: 0 0 24px rgba(168,85,247,0.35), 0 4px 16px rgba(0,0,0,0.4);
+/* ═══════════ tabs ═══════════ */
+.tab-bar{
+display:flex;gap:2px;
+background:rgba(4,6,14,.9);
+backdrop-filter:blur(20px);
+border-bottom:1px solid var(–b);
+padding:0 18px;
+overflow-x:auto;
 }
-.btn-sim:hover { box-shadow: 0 0 36px rgba(168,85,247,0.55), 0 6px 20px rgba(0,0,0,0.5); }
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{
+display:flex;align-items:center;gap:7px;
+padding:13px 16px;
+font-size:.78rem;font-weight:500;color:var(–muted);
+border:none;background:none;cursor:pointer;
+border-bottom:2px solid transparent;white-space:nowrap;
+transition:color .2s,border-color .2s;flex-shrink:0;
+}
+.tab-btn:hover{color:var(–text)}
+.tab-btn.active{color:var(–blue);border-bottom-color:var(–blue)}
+.tab-pane{display:none}
+.tab-pane.active{display:block;animation:fadeup .3s cubic-bezier(.16,1,.3,1)}
 
-.btn-ghost {
-  background: rgba(99,120,255,0.08);
-  color: var(--muted);
-  border: 1px solid var(--border);
+/* ═══════════ kpi cards ═══════════ */
+.kpi{padding:20px 22px;position:relative;overflow:hidden}
+.kpi::before{
+content:’’;position:absolute;top:0;left:0;right:0;height:1px;
+background:linear-gradient(90deg,transparent,var(–accent,var(–blue)),transparent);
+opacity:.55;
 }
-.btn-ghost:hover { color: var(--text); border-color: var(--border-hi); }
+.kpi-val{
+font-family:‘jetbrains mono’,monospace;
+font-size:1.85rem;font-weight:700;line-height:1;
+margin:8px 0 4px;
+transition:all .4s cubic-bezier(.16,1,.3,1);
+}
+.kpi-sub{font-size:.63rem;color:var(–muted)}
 
-/* ── Status dot ── */
-.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-.dot-blue   { background: var(--blue);   animation: pulseDot 2s infinite; box-shadow: 0 0 7px var(--blue); }
-.dot-violet { background: var(--violet); animation: pulseDot 2s infinite; box-shadow: 0 0 7px var(--violet); }
-.dot-green  { background: var(--green);  animation: pulseDot 2s infinite; box-shadow: 0 0 7px var(--green); }
-.dot-red    { background: var(--red); }
-.dot-dim    { background: var(--dim); }
+/* ═══════════ ia insight ═══════════ */
+.insight-card{
+padding:22px 24px;position:relative;overflow:hidden;min-height:86px;
+}
+.insight-card::before{
+content:’’;position:absolute;top:0;left:0;bottom:0;width:3px;
+background:linear-gradient(180deg,var(–blue),var(–violet));
+}
+.thinking-dots span{
+display:inline-block;width:6px;height:6px;border-radius:50%;
+background:var(–blue);margin:0 2px;
+animation:dotbounce 1.2s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2){animation-delay:.2s}
+.thinking-dots span:nth-child(3){animation-delay:.4s}
 
-/* ── Log lines ── */
-.log-line { font-size: 0.67rem; line-height: 1.7; font-family: 'JetBrains Mono', monospace; }
-.log-line::before { content: '› '; color: rgba(99,120,255,0.4); }
-
-/* ── Device row ── */
-.dev-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px; border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(8,11,24,0.5);
-  transition: background 0.2s, border-color 0.2s;
+/* ═══════════ device cards ═══════════ */
+.dev-card{
+padding:18px 20px;position:relative;overflow:hidden;
+transition:border-color .25s,transform .2s,box-shadow .2s;
 }
-.dev-row:hover { background: rgba(99,120,255,0.05); border-color: var(--border-hi); }
-
-/* ── Bar ── */
-.bar-track { background: var(--dim); border-radius: 3px; overflow: hidden; }
-.bar-fill  { height: 100%; border-radius: 3px; transition: width 0.9s cubic-bezier(0.16,1,0.3,1); }
-
-/* ── Meter ring ── */
-.ring {
-  stroke-dasharray: 427;
-  stroke-dashoffset: 427;
-  transition: stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1), stroke 0.5s;
-  stroke-linecap: round;
+.dev-card:hover{
+border-color:rgba(99,120,255,.35);
+transform:translatey(-2px);
+box-shadow:0 0 30px rgba(99,120,255,.12),0 8px 30px rgba(0,0,0,.5);
 }
-
-/* ── Tele history row ── */
-.tele-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; border-radius: 8px;
-  border: 1px solid var(--border); background: rgba(8,11,24,0.6);
+.dev-card::before{
+content:’’;position:absolute;top:0;left:0;right:0;height:1px;
+background:linear-gradient(90deg,transparent,rgba(99,120,255,.4),transparent);
+opacity:0;transition:opacity .25s;
 }
-
-/* ── Toast ── */
-.toast {
-  pointer-events: auto;
-  padding: 12px 16px; border-radius: 10px;
-  font-size: 0.76rem; display: flex; align-items: center; gap: 10px;
-  backdrop-filter: blur(20px);
-  animation: slideIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  max-width: 320px;
-}
-.toast-success { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); color: var(--green); }
-.toast-error   { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
-.toast-info    { background: rgba(99,120,255,0.12);  border: 1px solid rgba(99,120,255,0.3);  color: var(--blue); }
-.toast-warn    { background: rgba(251,191,36,0.12);  border: 1px solid rgba(251,191,36,0.3);  color: var(--amber); }
-
-/* ── Badge ── */
-.badge {
-  display: inline-flex; align-items: center;
-  padding: 2px 9px; border-radius: 20px; font-size: 0.6rem;
-  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-}
-.badge-blue   { background: rgba(99,120,255,0.15);  color: var(--blue);   border: 1px solid rgba(99,120,255,0.3); }
-.badge-violet { background: rgba(168,85,247,0.15); color: var(--violet); border: 1px solid rgba(168,85,247,0.3); }
-.badge-green  { background: rgba(74,222,128,0.15);  color: var(--green);  border: 1px solid rgba(74,222,128,0.3); }
-.badge-amber  { background: rgba(251,191,36,0.15);  color: var(--amber);  border: 1px solid rgba(251,191,36,0.3); }
-.badge-red    { background: rgba(248,113,113,0.15); color: var(--red);    border: 1px solid rgba(248,113,113,0.3); }
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 4px; }
-
-/* ── Animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes rise {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes pulseDot {
-  0%,100% { opacity: 1; }
-  50%      { opacity: 0.4; }
-}
-@keyframes dotBounce {
-  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
-  40%         { transform: scale(1.1); opacity: 1; }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes shimmer {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(100%); }
-}
-@keyframes flicker {
-  0%,100% { opacity:1; } 92%{ opacity:1; } 93%{ opacity:0.3; }
-  94%{ opacity:1; } 96%{ opacity:0.6; } 97%{ opacity:1; }
-}
-@keyframes scanLine {
-  from { transform: translateY(-100%); }
-  to   { transform: translateY(600%); }
+.dev-card:hover::before{opacity:1}
+.cost-result{
+margin-top:14px;padding:12px 16px;border-radius:var(–r-sm);
+background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.22);
+display:none;animation:fadeup .3s forwards;
 }
 
-.anim-rise { opacity:0; animation: rise 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
-.s1 { animation-delay: 0.05s; } .s2 { animation-delay: 0.1s; }
-.s3 { animation-delay: 0.15s; } .s4 { animation-delay: 0.2s; }
-.s5 { animation-delay: 0.25s; }
-
-/* Empty state */
-.empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:28px; gap:10px; color:var(--dim); text-align:center; }
-.empty svg { opacity:0.3; }
-.empty p { font-size:0.72rem; line-height:1.65; }
-
-/* Responsive */
-@media (max-width: 640px) {
-  .kpi-val { font-size: 1.5rem; }
-  .tab-btn { padding: 12px 12px; font-size: 0.75rem; }
+/* ═══════════ login screen ═══════════ */
+#login-screen{
+min-height:100vh;display:flex;align-items:center;justify-content:center;
+padding:20px;position:relative;z-index:10;
 }
+.login-card{
+width:100%;max-width:420px;padding:40px 36px;
+box-shadow:0 0 60px rgba(99,120,255,.15),0 20px 60px rgba(0,0,0,.7);
+}
+.login-logo{
+width:48px;height:48px;border-radius:14px;
+background:linear-gradient(135deg,rgba(99,120,255,.25),rgba(168,85,247,.25));
+border:1px solid rgba(99,120,255,.38);
+display:flex;align-items:center;justify-content:center;
+margin:0 auto 18px;
+}
+.tab-toggle{
+display:flex;background:rgba(4,6,14,.8);border:1px solid var(–b);
+border-radius:var(–r-sm);padding:4px;margin-bottom:26px;
+}
+.tab-toggle button{
+flex:1;padding:9px;font-size:.78rem;font-weight:600;
+border:none;background:none;color:var(–muted);cursor:pointer;
+border-radius:7px;transition:all .2s;
+}
+.tab-toggle button.active{
+background:linear-gradient(135deg,var(–blue),var(–violet));
+color:#fff;box-shadow:0 0 16px rgba(99,120,255,.4);
+}
+
+/* ═══════════ scrollbar ═══════════ */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(–dim);border-radius:4px}
+
+/* ═══════════ toasts ═══════════ */
+.toast{
+pointer-events:auto;padding:12px 16px;border-radius:var(–r-sm);
+font-size:.75rem;display:flex;align-items:center;gap:10px;
+backdrop-filter:blur(20px);
+box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:320px;
+animation:slidein .4s cubic-bezier(.16,1,.3,1) forwards;
+}
+.toast-success{background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.3); color:var(–green)}
+.toast-error  {background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(–red)}
+.toast-info   {background:rgba(99,120,255,.1); border:1px solid rgba(99,120,255,.3); color:var(–blue)}
+.toast-warn   {background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.3); color:var(–amber)}
+
+/* ═══════════ empty states ═══════════ */
+.empty{
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+padding:32px;gap:10px;color:var(–dim);text-align:center;
+}
+.empty svg{opacity:.25}
+.empty p{font-size:.72rem;line-height:1.65}
+
+/* ═══════════ keyframes ═══════════ */
+@keyframes fadeup{from{opacity:0;transform:translatey(12px)}to{opacity:1;transform:translatey(0)}}
+@keyframes rise{from{opacity:0;transform:translatey(18px)}to{opacity:1;transform:translatey(0)}}
+@keyframes slidein{from{opacity:0;transform:translatex(20px)}to{opacity:1;transform:translatex(0)}}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes dotbounce{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1.1);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.3}94%{opacity:1}96%{opacity:.6}97%{opacity:1}}
+@keyframes scan{from{transform:translatey(-100%)}to{transform:translatey(600%)}}
+@keyframes shimmerbg{from{background-position:200% 0}to{background-position:-200% 0}}
+
+.anim-rise{opacity:0;animation:rise .5s cubic-bezier(.16,1,.3,1) forwards}
+.s1{animation-delay:.05s}.s2{animation-delay:.1s}.s3{animation-delay:.15s}
+.s4{animation-delay:.2s}.s5{animation-delay:.25s}.s6{animation-delay:.3s}
+
+/* ═══════════ responsive ═══════════ */
+@media(max-width:640px){
+.login-card{padding:28px 20px}
+.kpi-val{font-size:1.5rem}
+.tab-btn{padding:12px 11px;font-size:.73rem}
+.dev-card{padding:14px 16px}
+}
+.field input, .field select { color: #ffffff !important; }
 </style>
+
 </head>
 <body>
 
-<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
-<header style="position:sticky;top:0;z-index:50;background:rgba(5,7,15,0.92);
-  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);">
-  <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div style="width:34px;height:34px;border-radius:10px;
-        background:linear-gradient(135deg,rgba(99,120,255,0.3),rgba(168,85,247,0.3));
-        border:1px solid rgba(99,120,255,0.4);
-        display:flex;align-items:center;justify-content:center;">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M9 1L3 9h5l-1 6 7-9H9l1-5z" fill="url(#boltGrad)"/>
-          <defs><linearGradient id="boltGrad" x1="3" y1="1" x2="13" y2="15" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#6378ff"/><stop offset="1" stop-color="#a855f7"/>
-          </linearGradient></defs>
+<!-- ═══════════════════════════════ login screen ═══════════════════════════════ -->
+
+<div id="login-screen">
+  <div class="glass-hi login-card">
+
+```
+<div class="login-logo">
+  <svg width="22" height="22" viewbox="0 0 22 22" fill="none">
+    <path d="m12 2l4 12h7l-2 8 11-12h-7l2-6z" fill="url(#lg1)"/>
+    <defs>
+      <lineargradient id="lg1" x1="4" y1="2" x2="18" y2="20" gradientunits="userspaceonuse">
+        <stop stop-color="#6378ff"/><stop offset="1" stop-color="#a855f7"/>
+      </lineargradient>
+    </defs>
+  </svg>
+</div>
+
+<h1 style="text-align:center;font-size:1.5rem;font-weight:800;margin-bottom:4px;"
+  class="grad-text">smartplug ai</h1>
+<p style="text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:24px;">
+  gestão inteligente de consumo iot
+</p>
+
+<!-- toggle login/signup -->
+<div class="tab-toggle">
+  <button id="toggle-login" class="active" onclick="setauthmode('login')">entrar</button>
+  <button id="toggle-signup" onclick="setauthmode('signup')">criar conta</button>
+</div>
+
+<!-- login fields -->
+<div id="auth-fields" style="display:flex;flex-direction:column;gap:16px;margin-bottom:22px;">
+  <div class="field" id="wrap-signup-name" style="display:none;">
+    <label>nome completo</label>
+    <input type="text" id="auth-name" placeholder="seu nome"/>
+  </div>
+  <div class="field" id="wrap-auth-email">
+    <label>e-mail</label>
+    <input type="text" id="auth-email" placeholder="seu@email.com"/>
+    <span class="err">e-mail inválido.</span>
+  </div>
+  <div class="field">
+    <label>senha</label>
+    <div style="position:relative;">
+      <input type="password" id="auth-pass" placeholder="••••••••" style="padding-right:44px;"/>
+      <button onclick="togglepassvis()" style="position:absolute;right:12px;top:50%;transform:translatey(-50%);
+        background:none;border:none;cursor:pointer;color:var(--muted);" title="mostrar senha">
+        <svg id="eye-icon" width="16" height="16" viewbox="0 0 20 20" fill="none">
+          <path d="m1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z" stroke="currentcolor" stroke-width="1.4"/>
+          <circle cx="10" cy="10" r="2.5" stroke="currentcolor" stroke-width="1.4"/>
         </svg>
-      </div>
-      <div>
-        <div style="font-size:1rem;font-weight:700;letter-spacing:0.05em;
-          background:linear-gradient(90deg,#6378ff,#a855f7);
-          -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-          animation:flicker 6s ease-in-out infinite;">
-          SmartPlug AI
+      </button>
+    </div>
+  </div>
+</div>
+
+<button id="btn-auth" onclick="submitauth()"
+  style="width:100%;padding:9px;font-size:.78rem;font-weight:600;border:none;cursor:pointer;border-radius:7px;transition:all .2s;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;box-shadow:0 0 16px rgba(99,120,255,.4);font-family:'space grotesk',sans-serif;">
+  <span id="btn-auth-txt">entrar</span>
+</button>
+
+<div id="auth-error" style="margin-top:14px;padding:10px 14px;border-radius:8px;
+  background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.28);
+  font-size:.72rem;color:var(--red);display:none;text-align:center;"></div>
+
+<p style="text-align:center;font-size:.65rem;color:var(--dim);margin-top:20px;">
+  admin demo: <span style="color:var(--blue);font-family:'jetbrains mono',monospace;">admin@teste.com</span>
+</p>
+```
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ dashboard ═══════════════════════════════ -->
+
+<div id="dashboard" style="display:none;">
+
+  <!-- header -->
+
+  <header style="position:sticky;top:0;z-index:50;
+    background:rgba(4,6,14,.94);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--b);">
+    <div class="z" style="max-width:1100px;margin:0 auto;
+      padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:32px;height:32px;border-radius:9px;flex-shrink:0;
+          background:linear-gradient(135deg,rgba(99,120,255,.28),rgba(168,85,247,.28));
+          border:1px solid rgba(99,120,255,.38);
+          display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewbox="0 0 16 16" fill="none">
+            <path d="m9 1l3 9h5l-1 6 7-9h9l1-5z" fill="url(#bh)"/>
+            <defs><lineargradient id="bh" x1="3" y1="1" x2="13" y2="15" gradientunits="userspaceonuse">
+              <stop stop-color="#6378ff"/><stop offset="1" stop-color="#a855f7"/>
+            </lineargradient></defs>
+          </svg>
         </div>
-        <div class="label" style="margin-top:1px;">Gestão Inteligente de Consumo IoT</div>
+        <div>
+          <div class="grad-text" style="font-size:.95rem;font-weight:800;letter-spacing:.04em;animation:flicker 6s infinite;">
+            smartplug ai
+          </div>
+          <div class="label" style="margin-top:1px;">painel de controle</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="dot dot-green"></span>
+          <div>
+            <div id="hdr-user" style="font-size:.78rem;font-weight:600;color:var(--text);"></div>
+            <div id="hdr-role" class="label" style="margin-top:1px;"></div>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="logout()">sair</button>
       </div>
     </div>
-    <div class="flex items-center gap-4">
-      <div class="hidden sm:flex items-center gap-2">
-        <span class="dot dot-green"></span>
-        <span style="font-size:0.68rem;color:var(--muted);">ONLINE</span>
+  </header>
+
+  <!-- tabs -->
+
+  <nav class="tab-bar z" style="max-width:1100px;margin:0 auto;">
+    <button class="tab-btn active" id="tab-btn-devices" onclick="switchtab('devices',this)">
+      📱 meus dispositivos
+    </button>
+    <button class="tab-btn" id="tab-btn-new" onclick="switchtab('new',this)">
+      ➕ novo aparelho
+    </button>
+    <button class="tab-btn" id="tab-btn-monitor" onclick="switchtab('monitor',this)" style="display:none;">
+      📊 monitoramento
+    </button>
+    <button class="tab-btn" id="tab-btn-sim" onclick="switchtab('sim',this)" style="display:none;">
+      🤖 simulador ia
+      <span class="badge badge-violet" style="font-size:.52rem;padding:1px 6px;">admin</span>
+    </button>
+  </nav>
+
+  <!-- content -->
+
+  <div class="z" style="max-width:1100px;margin:0 auto;padding:24px 16px;">
+
+```
+<!-- ══════════════ aba: meus dispositivos ══════════════ -->
+<div id="tab-devices" class="tab-pane active">
+
+  <!-- kpi row -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:13px;margin-bottom:22px;">
+    <div class="glass kpi anim-rise s1" style="--accent:var(--blue)">
+      <div class="label">total cadastrado</div>
+      <div class="kpi-val" id="kpi-total" style="color:var(--blue);">0</div>
+      <div class="kpi-sub">aparelhos</div>
+    </div>
+    <div class="glass kpi anim-rise s2" style="--accent:var(--amber)">
+      <div class="label">potência total</div>
+      <div class="kpi-val" id="kpi-pot" style="color:var(--amber);">0 w</div>
+      <div class="kpi-sub">soma cadastrada</div>
+    </div>
+    <div class="glass kpi anim-rise s3" style="--accent:var(--green)">
+      <div class="label">custo/hora total</div>
+      <div class="kpi-val" id="kpi-custo-h" style="color:var(--green);">r$ 0,00</div>
+      <div class="kpi-sub">(w ÷ 1000) × 0,92</div>
+    </div>
+    <div class="glass kpi anim-rise s4" style="--accent:var(--cyan)">
+      <div class="label">custo mensal est.</div>
+      <div class="kpi-val" id="kpi-custo-m" style="color:var(--cyan);">r$ 0,00</div>
+      <div class="kpi-sub">8h/dia × 30 dias</div>
+    </div>
+  </div>
+
+  <!-- grid de cards de dispositivos -->
+  <div id="devices-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+    <div class="empty anim-rise" style="grid-column:1/-1;">
+      <svg width="40" height="40" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="m9 7h6m9 11h6m9 15h4"/>
+      </svg>
+      <p>nenhum aparelho cadastrado ainda.<br/>vá para a aba <strong style="color:var(--blue)">➕ novo aparelho</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ aba: novo aparelho ══════════════ -->
+<div id="tab-new" class="tab-pane">
+  <div style="max-width:580px;margin:0 auto;">
+    <div class="glass anim-rise" style="padding:0;overflow:hidden;">
+
+      <!-- card header -->
+      <div style="padding:20px 26px;border-bottom:1px solid var(--b);
+        background:linear-gradient(135deg,rgba(99,120,255,.07),rgba(168,85,247,.05));">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;border-radius:11px;flex-shrink:0;
+            background:rgba(99,120,255,.12);border:1px solid rgba(99,120,255,.3);
+            display:flex;align-items:center;justify-content:center;">
+            <svg width="18" height="18" viewbox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="7" stroke="#6378ff" stroke-width="1.5"/>
+              <path d="m9 6v6m6 9h6" stroke="#6378ff" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:.95rem;font-weight:700;" class="grad-text">cadastrar novo aparelho</div>
+            <div class="label" style="margin-top:2px;">conecte ao ecossistema smartplug ai</div>
+          </div>
+        </div>
       </div>
-      <div style="text-align:right;">
-        <div id="clock" class="mono glow-blue" style="font-size:0.85rem;color:var(--blue);"></div>
-        <div class="label" style="margin-top:1px;">ao vivo</div>
+
+      <div style="padding:26px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+
+          <div class="field" id="en-nome-w" style="grid-column:1/-1;">
+            <label>nome do aparelho</label>
+            <input type="text" id="en-nome" placeholder="ex: geladeira samsung" maxlength="60"/>
+            <span class="err">informe o nome.</span>
+          </div>
+
+          <div class="field" id="en-tensao-w">
+            <label>tensão</label>
+            <select id="en-tensao">
+              <option value="220">220v</option>
+              <option value="127">127v</option>
+              <option value="bivolt">bivolt</option>
+            </select>
+          </div>
+
+          <div class="field" id="en-comodo-w">
+            <label>cômodo</label>
+            <select id="en-comodo">
+              <option value="">— selecione —</option>
+              <option value="cozinha">🍳 cozinha</option>
+              <option value="sala">🛋️ sala</option>
+              <option value="quarto">🛏️ quarto</option>
+              <option value="escritório">💼 escritório</option>
+              <option value="banheiro">🚿 banheiro</option>
+              <option value="área de serviço">🧺 área de serviço</option>
+              <option value="garagem">🚗 garagem</option>
+              <option value="sala de reuniões">📋 sala de reuniões</option>
+            </select>
+            <span class="err">selecione o cômodo.</span>
+          </div>
+
+          <div class="field" id="en-pot-w" style="grid-column:1/-1;">
+            <label>potência (watts)</label>
+            <input type="number" id="en-pot" placeholder="ex: 350" min="1" max="50000"/>
+            <span class="err">informe a potência.</span>
+          </div>
+
+        </div>
+
+        <!-- preview json -->
+        <div style="margin-bottom:20px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--b);">
+          <div style="padding:8px 15px;background:rgba(4,6,14,.9);
+            border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;">
+            <span class="label">payload que será enviado</span>
+            <button class="btn btn-outline btn-xs" onclick="copyequippayload()">copiar</button>
+          </div>
+          <pre id="equip-preview" style="padding:14px 16px;font-size:.68rem;
+            line-height:1.8;color:var(--muted);overflow-x:auto;max-height:130px;
+            background:rgba(2,3,8,.95);font-family:'jetbrains mono',monospace;"></pre>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-grad" id="btn-equip" onclick="cadastrarequip()">
+            <svg width="13" height="13" viewbox="0 0 13 13" fill="none">
+              <circle cx="6.5" cy="6.5" r="5.5" stroke="currentcolor" stroke-width="1.4"/>
+              <path d="m6.5 4v5m4 6.5h5" stroke="currentcolor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <span id="btn-equip-txt">cadastrar aparelho</span>
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="clearequipform()">limpar</button>
+          <div id="equip-status" style="margin-left:auto;font-size:.7rem;
+            font-family:'jetbrains mono',monospace;"></div>
+        </div>
+
+        <div id="equip-banner"></div>
       </div>
     </div>
   </div>
-</header>
+</div>
 
-<!-- ═══════════════════════════════════ TABS ═══════════════════════════════════ -->
-<nav class="tab-bar max-w-6xl" style="margin:0 auto;">
-  <button class="tab-btn active" onclick="switchTab('monitor',this)">
-    <span class="tab-emoji">📊</span> Monitoramento
-  </button>
-  <button class="tab-btn" onclick="switchTab('cadastro',this)">
-    <span class="tab-emoji">🔌</span> Cadastro
-  </button>
-  <button class="tab-btn" onclick="switchTab('simulador',this)">
-    <span class="tab-emoji">🛠️</span> Simulador
-    <span class="badge badge-violet" style="font-size:0.55rem;padding:1px 6px;">Modo Técnico</span>
-  </button>
-</nav>
+<!-- ══════════════ aba: monitoramento ══════════════ -->
+<div id="tab-monitor" class="tab-pane">
 
-<!-- ═══════════════════════════════════ CONTENT ═══════════════════════════════════ -->
-<div class="max-w-6xl mx-auto px-4 py-7" style="position:relative;z-index:10;">
-
-<!-- ══════════════════════════════ ABA: MONITORAMENTO ══════════════════════════════ -->
-<div id="tab-monitor" class="tab-pane active">
-
-  <!-- Banner aguardando -->
-  <div id="waiting-banner" class="glass anim-rise mb-6 px-5 py-4 flex items-start gap-4"
-    style="border-color:rgba(99,120,255,0.2);">
-    <span class="dot dot-blue" style="margin-top:5px;"></span>
-    <p style="font-size:0.76rem;line-height:1.7;color:var(--muted);">
-      Nenhum dado recebido ainda.
-      Vá até <strong style="color:var(--blue);">Simulador</strong> e clique em
-      <strong style="color:var(--violet);">"Simular Telemetria"</strong> para iniciar o monitoramento.
-    </p>
-  </div>
-
-  <!-- KPIs -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
-
-    <div class="glass kpi-card anim-rise s1 shadow-blue" style="--accent:var(--blue);">
-      <div class="label">Consumo Total</div>
-      <div class="kpi-val glow-blue" id="kpi-watts" style="color:var(--blue);">— W</div>
-      <div class="kpi-sub" id="kpi-watts-sub">aguardando telemetria</div>
+  <!-- kpis monitoramento -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:13px;margin-bottom:20px;">
+    <div class="glass kpi anim-rise s1" style="--accent:var(--blue)">
+      <div class="label">consumo total</div>
+      <div class="kpi-val mono" id="mon-watts" style="color:var(--blue);">— w</div>
+      <div class="kpi-sub">última telemetria</div>
     </div>
-
-    <div class="glass kpi-card anim-rise s2" style="--accent:var(--cyan);">
-      <div class="label">kWh Acumulado</div>
-      <div class="kpi-val glow-cyan" id="kpi-kwh" style="color:var(--cyan);">—</div>
-      <div class="kpi-sub">nesta sessão</div>
+    <div class="glass kpi anim-rise s2" style="--accent:var(--amber)">
+      <div class="label">custo est. hoje</div>
+      <div class="kpi-val" id="mon-cost" style="color:var(--amber);">—</div>
+      <div class="kpi-sub" id="mon-cost-formula">(w ÷ 1000) × 0,92</div>
     </div>
-
-    <div class="glass kpi-card anim-rise s3" style="--accent:var(--amber);">
-      <div class="label">Custo Est. Hoje</div>
-      <div class="kpi-val" id="kpi-cost" style="color:var(--amber);">—</div>
-      <div class="kpi-sub" id="kpi-cost-sub">(W ÷ 1000) × 0,92</div>
-    </div>
-
-    <div class="glass kpi-card anim-rise s4" style="--accent:var(--muted);">
-      <div class="label">Dispositivos</div>
-      <div class="kpi-val mono" id="kpi-devs" style="color:var(--text);">0 / 0</div>
+    <div class="glass kpi anim-rise s3" style="--accent:var(--green)">
+      <div class="label">dispositivos</div>
+      <div class="kpi-val" id="mon-devs" style="color:var(--green);">0</div>
       <div class="kpi-sub">cadastrados</div>
     </div>
+    <div class="glass kpi anim-rise s4" style="--accent:var(--violet)">
+      <div class="label">status</div>
+      <div style="margin:10px 0 4px;">
+        <span id="mon-status-badge" class="badge badge-blue">aguardando</span>
+      </div>
+      <div class="kpi-sub">ecossistema ia</div>
+    </div>
   </div>
 
-  <!-- IA INSIGHT CARD -->
-  <div class="glass-hi insight-card anim-rise s5 mb-6" id="card-ia-insight"
-    style="box-shadow:0 0 40px rgba(99,120,255,0.1),0 8px 32px rgba(0,0,0,0.5);">
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+  <!-- ia insight card -->
+  <div class="glass-hi insight-card anim-rise s5 mb-5"
+    style="margin-bottom:20px;box-shadow:0 0 40px rgba(99,120,255,.1),0 8px 32px rgba(0,0,0,.5);">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      gap:8px;margin-bottom:14px;">
       <div style="display:flex;align-items:center;gap:10px;">
-        <!-- ícone IA -->
-        <div id="ia-icon-wrap" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
-          background:linear-gradient(135deg,rgba(99,120,255,0.2),rgba(168,85,247,0.2));
-          border:1px solid rgba(99,120,255,0.3);
+        <div id="ia-ic-wrap" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
+          background:linear-gradient(135deg,rgba(99,120,255,.18),rgba(168,85,247,.18));
+          border:1px solid rgba(99,120,255,.3);
           display:flex;align-items:center;justify-content:center;">
-          <svg id="ia-icon-static" width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="6" r="3" stroke="url(#iaGrad)" stroke-width="1.5"/>
-            <path d="M5 10.5c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="url(#iaGrad)" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M8 13v1.5" stroke="#a855f7" stroke-width="1.3" stroke-linecap="round"/>
-            <defs><linearGradient id="iaGrad" x1="5" y1="3" x2="11" y2="13" gradientUnits="userSpaceOnUse">
+          <svg id="ia-ic-s" width="16" height="16" viewbox="0 0 16 16" fill="none">
+            <circle cx="8" cy="6" r="3" stroke="url(#gia)" stroke-width="1.5"/>
+            <path d="m5 10.5c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="url(#gia)" stroke-width="1.5" stroke-linecap="round"/>
+            <defs><lineargradient id="gia" x1="5" y1="3" x2="11" y2="13" gradientunits="userspaceonuse">
               <stop stop-color="#6378ff"/><stop offset="1" stop-color="#a855f7"/>
-            </linearGradient></defs>
+            </lineargradient></defs>
           </svg>
-          <svg id="ia-icon-spin" width="16" height="16" viewBox="0 0 16 16" fill="none"
-            style="display:none;animation:spin 0.9s linear infinite;">
-            <circle cx="8" cy="8" r="5.5" stroke="rgba(99,120,255,0.3)" stroke-width="1.5"/>
-            <path d="M8 2.5A5.5 5.5 0 0 1 13.5 8" stroke="#6378ff" stroke-width="1.5" stroke-linecap="round"/>
+          <svg id="ia-ic-spin" width="16" height="16" viewbox="0 0 16 16" fill="none"
+            style="display:none;animation:spin .85s linear infinite;">
+            <circle cx="8" cy="8" r="5.5" stroke="rgba(99,120,255,.25)" stroke-width="1.5"/>
+            <path d="m8 2.5a5.5 5.5 0 0 1 13.5 8" stroke="#6378ff" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
         </div>
         <div>
-          <div style="font-size:0.92rem;font-weight:600;
-            background:linear-gradient(90deg,#6378ff,#a855f7);
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
-            IA Insight
-          </div>
-          <div class="label">resposta do ecossistema Make.com</div>
+          <div style="font-size:.95rem;font-weight:700;" class="grad-text">ia insight</div>
+          <div class="label">resposta do gemini via make.com</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span id="ia-badge" class="badge badge-blue" style="display:none;">Make.com</span>
-        <span id="ia-ts" style="font-size:0.6rem;color:var(--dim);font-family:'JetBrains Mono',monospace;"></span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="ia-badge" class="badge badge-blue" style="display:none;">make.com</span>
+        <span id="ia-ts" class="mono" style="font-size:.6rem;color:var(--dim);"></span>
       </div>
     </div>
-
-    <!-- Conteúdo do insight -->
-    <div id="ia-content" style="padding-left:46px;">
-      <div id="iaResultado" style="font-size:0.82rem;line-height:1.75;color:var(--text);font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word;">
-       Aguardando primeira leitura de telemetria...
-      </div> 
-
-      <!-- Estado: aguardando -->
-      <div id="ia-state-idle" style="font-size:0.78rem;color:var(--dim);font-style:italic;">
-         <p id="iaResultado">Aguardando primeira leitura de telemetria...</p>
+    <div style="padding-left:46px;">
+      <div id="ia-idle"     style="font-size:.78rem;color:var(--dim);font-style:italic;">aguardando leitura de telemetria...</div>
+      <div id="ia-thinking" style="display:none;align-items:center;gap:10px;">
+        <div class="thinking-dots"><span></span><span></span><span></span></div>
+        <span style="font-size:.78rem;color:var(--blue);">ia processando...</span>
       </div>
-
-      <!-- Estado: processando -->
-      <div id="ia-state-thinking" style="display:none;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="thinking-dots" style="display:flex;align-items:center;gap:3px;">
-            <span></span><span></span><span></span>
-          </div>
-          <span style="font-size:0.78rem;color:var(--blue);">IA processando resposta...</span>
-        </div>
-        <div style="margin-top:10px;height:1px;background:linear-gradient(90deg,var(--blue),var(--violet),transparent);
-          animation:shimmer 2s linear infinite;background-size:200% 100%;"></div>
+      <div id="ia-result" style="display:none;">
+        <div id="ia-text" style="font-size:.82rem;line-height:1.75;color:var(--text);
+          font-family:'jetbrains mono',monospace;white-space:pre-wrap;word-break:break-word;"></div>
       </div>
-
-      <!-- Estado: resultado -->
-      <div id="ia-state-result">
-       <div id="ia-text">
-         Aguardando primeira leitura de telemetria...
-       </div>
-      </div>
-
-      <!-- Estado: erro -->
-      <div id="ia-state-error" style="display:none;">
-        <div id="ia-error-text" style="font-size:0.78rem;color:var(--red);"></div>
+      <div id="ia-err" style="display:none;">
+        <div id="ia-err-txt" style="font-size:.78rem;color:var(--red);"></div>
       </div>
     </div>
   </div>
 
-  <!-- Medidor + Devices -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:18px;">
-
-    <!-- Medidor radial -->
-    <div class="glass anim-rise" style="padding:24px;display:flex;flex-direction:column;
-      align-items:center;animation-delay:0.3s;">
-      <div class="label mb-4">Carga do Sistema</div>
-      <div style="position:relative;width:170px;height:170px;">
-        <svg width="170" height="170" viewBox="0 0 170 170" style="transform:rotate(-90deg);">
-          <circle cx="85" cy="85" r="67" fill="none" stroke="rgba(99,120,255,0.1)" stroke-width="9"/>
-          <circle id="meter-ring" cx="85" cy="85" r="67" fill="none"
-            stroke="#6378ff" stroke-width="9" class="ring"
-            style="filter:drop-shadow(0 0 8px #6378ff);"/>
-        </svg>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;
-          align-items:center;justify-content:center;">
-          <span id="meter-pct" class="mono glow-blue"
-            style="font-size:2rem;font-weight:700;color:var(--blue);">0%</span>
-          <span class="label">capacidade</span>
-        </div>
-        <div style="position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none;">
-          <div style="height:2px;width:100%;
-            background:linear-gradient(90deg,transparent,rgba(99,120,255,0.2),transparent);
-            animation:scanLine 3s linear infinite;"></div>
-        </div>
-      </div>
-      <div id="meter-lbl" class="badge badge-blue mt-4">Aguardando dados</div>
-    </div>
-
-    <!-- Devices list -->
-    <div class="glass anim-rise" style="display:flex;flex-direction:column;animation-delay:0.35s;">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border);
-        display:flex;align-items:center;gap:8px;">
-        <span class="dot dot-blue"></span>
-        <span class="title">Dispositivos Monitorados</span>
-        <span id="dev-badge" class="badge badge-blue ml-auto">0 online</span>
-      </div>
-      <div id="dev-list" style="padding:14px;flex:1;overflow-y:auto;max-height:280px;">
-        <div class="empty">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-            <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <path d="M9 7h6M9 11h6M9 15h4"/>
-          </svg>
-          <p>Nenhum dispositivo.<br/>Cadastre na aba 🔌.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Log -->
-  <div class="glass anim-rise" style="animation-delay:0.4s;">
-    <div style="padding:13px 18px;border-bottom:1px solid var(--border);
+  <!-- log -->
+  <div class="glass anim-rise" style="animation-delay:.3s;">
+    <div style="padding:12px 18px;border-bottom:1px solid var(--b);
       display:flex;align-items:center;gap:8px;">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+      <svg width="13" height="13" viewbox="0 0 13 13" fill="none">
         <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="var(--muted)" stroke-width="1.2"/>
-        <path d="M4 4.5h5M4 7h5M4 9.5h3" stroke="var(--muted)" stroke-width="1" stroke-linecap="round"/>
+        <path d="m3.5 4.5h6m3.5 7h6m3.5 9.5h3.5" stroke="var(--muted)" stroke-width="1" stroke-linecap="round"/>
       </svg>
-      <span class="title">Log de Eventos</span>
-      <span id="log-badge" class="badge badge-blue ml-auto">0 eventos</span>
+      <span style="font-size:.8rem;font-weight:600;">log de eventos</span>
+      <span id="log-badge" class="badge badge-blue ml-auto" style="margin-left:auto;">0</span>
     </div>
-    <div id="event-log" style="padding:14px 18px;max-height:130px;overflow-y:auto;">
-      <div class="empty" style="padding:14px 0;"><p>Nenhum evento ainda.</p></div>
-    </div>
-  </div>
-
-</div><!-- /tab-monitor -->
-
-<!-- ══════════════════════════════ ABA: CADASTRO ══════════════════════════════ -->
-<div id="tab-cadastro" class="tab-pane">
-
-  <div style="display:grid;grid-template-columns:1fr;gap:20px;">
-
-    <!-- Formulário -->
-    <div class="glass anim-rise" style="animation-delay:0.05s;">
-      <div style="padding:18px 22px;border-bottom:1px solid var(--border);
-        display:flex;align-items:center;gap:12px;">
-        <div style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
-          background:rgba(99,120,255,0.12);border:1px solid rgba(99,120,255,0.3);
-          display:flex;align-items:center;justify-content:center;">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="6.5" stroke="#6378ff" stroke-width="1.4"/>
-            <path d="M8 5v6M5 8h6" stroke="#6378ff" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="title">Cadastrar Novo Dispositivo</div>
-          <div class="label" style="margin-top:2px;">Registre um aparelho para monitoramento via IA</div>
-        </div>
-      </div>
-      <div style="padding:24px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:22px;">
-
-          <div class="field" id="wrap-name">
-            <label>Nome do Eletrodoméstico</label>
-            <input type="text" id="f-name" placeholder="ex: Geladeira, Ar-Condicionado..." maxlength="60" oninput="refreshCadPreview()"/>
-            <span class="err">Informe o nome do dispositivo.</span>
-          </div>
-
-          <div class="field" id="wrap-watts">
-            <label>Potência Estimada (Watts)</label>
-            <input type="number" id="f-watts" placeholder="ex: 350" min="1" max="50000" oninput="refreshCadPreview()"/>
-            <span class="err">Informe um valor válido.</span>
-          </div>
-
-          <div class="field" id="wrap-loc">
-            <label>Cômodo / Localização</label>
-            <select id="f-loc" onchange="refreshCadPreview()">
-              <option value="">— Selecione —</option>
-              <option value="Cozinha">🍳  Cozinha</option>
-              <option value="Sala">🛋️  Sala</option>
-              <option value="Quarto">🛏️  Quarto</option>
-              <option value="Escritório">💼  Escritório</option>
-              <option value="Banheiro">🚿  Banheiro</option>
-              <option value="Garagem">🚗  Garagem</option>
-              <option value="Área de Serviço">🧺  Área de Serviço</option>
-              <option value="Sala de Reuniões">📋  Sala de Reuniões</option>
-              <option value="Servidor / TI">🖥️  Servidor / TI</option>
-            </select>
-            <span class="err">Selecione uma localização.</span>
-          </div>
-
-          <div class="field">
-            <label>Tensão (V)</label>
-            <select id="f-tensao">
-              <option value="220">220V</option>
-              <option value="127">127V</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Preview JSON -->
-        <div style="margin-bottom:22px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
-          <div style="padding:9px 16px;background:rgba(8,11,24,0.9);border-bottom:1px solid var(--border);
-            display:flex;align-items:center;justify-content:space-between;">
-            <span class="label">Preview JSON</span>
-            <button class="btn btn-ghost" onclick="copyCadPayload()"
-              style="padding:3px 10px;font-size:0.6rem;">copiar</button>
-          </div>
-          <pre id="cad-preview" style="padding:14px 18px;font-size:0.7rem;
-            line-height:1.8;color:var(--muted);overflow-x:auto;
-            max-height:140px;background:rgba(5,7,15,0.9);font-family:'JetBrains Mono',monospace;"></pre>
-        </div>
-
-        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-          <button class="btn btn-primary" id="btn-cad" onclick="cadastrarDispositivo()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M7 4.5v5M4.5 7h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span id="btn-cad-txt">Cadastrar Dispositivo</span>
-          </button>
-          <button class="btn btn-ghost" onclick="clearCadForm()">Limpar</button>
-          <div id="cad-status" style="margin-left:auto;font-size:0.7rem;font-family:'JetBrains Mono',monospace;"></div>
-        </div>
-
-        <!-- Banner sucesso cadastro -->
-        <div id="cad-success-banner"></div>
-      </div>
-    </div>
-
-    <!-- Dispositivos cadastrados na sessão -->
-    <div class="glass anim-rise" id="session-section" style="display:none;animation-delay:0.1s;">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border);
-        display:flex;align-items:center;gap:8px;">
-        <span class="dot dot-violet"></span>
-        <span class="title">Cadastrados Nesta Sessão</span>
-        <span id="sess-badge" class="badge badge-violet ml-auto">0</span>
-      </div>
-      <div id="session-list" style="padding:14px;display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="event-log" style="padding:13px 18px;max-height:140px;overflow-y:auto;">
+      <div class="empty" style="padding:14px 0;"><p>nenhum evento ainda.</p></div>
     </div>
   </div>
+</div>
 
-</div><!-- /tab-cadastro -->
+<!-- ══════════════ aba: simulador ia ══════════════ -->
+<div id="tab-sim" class="tab-pane">
 
-<!-- ══════════════════════════════ ABA: SIMULADOR ══════════════════════════════ -->
-<div id="tab-simulador" class="tab-pane">
-
-  <!-- Cabeçalho modo técnico -->
-  <div class="glass-hi anim-rise mb-6 px-5 py-4 flex items-start gap-4"
-    style="border-color:rgba(168,85,247,0.25);background:rgba(168,85,247,0.05);">
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0;margin-top:2px;">
-      <path d="M9 2L2.5 9H7L5.5 16 15.5 9H11L13 2H9z" fill="none" stroke="#a855f7" stroke-width="1.4" stroke-linejoin="round"/>
+  <!-- banner admin -->
+  <div class="glass-hi anim-rise mb-6"
+    style="margin-bottom:20px;padding:16px 22px;display:flex;align-items:flex-start;gap:14px;
+    border-color:rgba(168,85,247,.28);background:rgba(168,85,247,.05);">
+    <svg width="18" height="18" viewbox="0 0 18 18" fill="none" style="flex-shrink:0;margin-top:2px;">
+      <path d="m9 2l-7 7h4.5l5 16l12-9h12l14 2h9z" stroke="#a855f7" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
     </svg>
     <div>
-      <div style="font-size:0.82rem;font-weight:600;color:var(--violet);margin-bottom:4px;">Modo Técnico — Simulador IoT</div>
-      <p style="font-size:0.72rem;color:var(--muted);line-height:1.65;">
-        Gera um payload de telemetria com valores aleatórios e envia via POST ao Make.com.
-        A resposta do campo <code style="color:var(--blue);background:rgba(99,120,255,0.1);
-        padding:1px 5px;border-radius:4px;">"analisar"</code> é exibida no card IA Insight.
+      <div style="font-size:.84rem;font-weight:600;color:var(--violet);margin-bottom:3px;">modo admin — simulador iot</div>
+      <p style="font-size:.71rem;color:var(--muted);line-height:1.65;">
+        gera payload de telemetria e envia para o make.com.
+        o campo <code style="color:var(--blue);background:rgba(99,120,255,.1);
+        padding:1px 6px;border-radius:4px;">"analisar"</code> da resposta
+        é exibido no card ia insight.
       </p>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr;gap:20px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
 
-    <!-- Painel do simulador -->
-    <div class="glass anim-rise" style="animation-delay:0.1s;">
-      <div style="padding:18px 22px;border-bottom:1px solid var(--border);
-        display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
-            background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);
-            display:flex;align-items:center;justify-content:center;">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M1 8C1 4.69 4.686 2 8 2s7 2.69 7 6" stroke="#a855f7" stroke-width="1.4" stroke-linecap="round"/>
-              <path d="M3.5 8C3.5 5.515 5.69 4 8 4" stroke="#a855f7" stroke-width="1.4" stroke-linecap="round"/>
-              <circle cx="8" cy="8" r="1.5" fill="#a855f7"/>
-            </svg>
-          </div>
-          <div>
-            <div class="title">Simulador de Telemetria IoT</div>
-            <div class="label" style="margin-top:2px;">Webhook → Make.com → Gemini AI → Dashboard</div>
-          </div>
+    <!-- painel de simulação -->
+    <div class="glass anim-rise" style="animation-delay:.1s;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--b);
+        display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:.86rem;font-weight:700;" class="grad-text2">simulador de telemetria</div>
+          <div class="label" style="margin-top:2px;">webhook → make → gemini → dashboard</div>
         </div>
-        <div id="tele-count-badge" class="badge badge-violet" style="display:none;">0 leituras</div>
+        <span id="sim-count-badge" class="badge badge-violet" style="display:none;">0 leituras</span>
       </div>
+      <div style="padding:20px;">
 
-      <div style="padding:24px;">
-        <!-- Preview do payload -->
-        <div style="margin-bottom:22px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
-          <div style="padding:9px 16px;background:rgba(8,11,24,0.9);border-bottom:1px solid var(--border);
-            display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span id="tele-dot" class="dot dot-dim"></span>
-            <span class="label">Último Payload Gerado</span>
-            <button class="btn btn-ghost ml-auto" onclick="copyTelePayload()"
-              style="padding:3px 10px;font-size:0.6rem;">copiar</button>
+        <!-- preview payload -->
+        <div style="margin-bottom:18px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--b);">
+          <div style="padding:8px 14px;background:rgba(4,6,14,.9);border-bottom:1px solid var(--b);
+            display:flex;align-items:center;gap:8px;">
+            <span id="sim-dot" class="dot dot-dim"></span>
+            <span class="label">último payload</span>
+            <button class="btn btn-outline btn-xs" style="margin-left:auto;" onclick="copysimpayload()">copiar</button>
           </div>
-          <pre id="tele-preview" style="padding:14px 18px;font-size:0.7rem;line-height:1.8;
-            color:var(--muted);overflow-x:auto;max-height:180px;background:rgba(5,7,15,0.9);
-            font-family:'JetBrains Mono',monospace;">Clique em "Simular Telemetria" para gerar a primeira leitura...</pre>
+          <pre id="sim-preview" style="padding:13px 16px;font-size:.68rem;line-height:1.8;
+            color:var(--muted);overflow-x:auto;max-height:160px;
+            background:rgba(2,3,8,.95);font-family:'jetbrains mono',monospace;">clique em "simular telemetria" para gerar...</pre>
         </div>
 
-        <!-- Histórico -->
-        <div id="tele-history-wrap" style="margin-bottom:22px;display:none;">
-          <div class="label mb-3">Histórico de Leituras</div>
-          <div id="tele-history" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;"></div>
+        <!-- histórico -->
+        <div id="sim-hist-wrap" style="margin-bottom:18px;display:none;">
+          <div class="label" style="margin-bottom:8px;">histórico de leituras</div>
+          <div id="sim-hist" style="display:flex;flex-direction:column;gap:5px;
+            max-height:170px;overflow-y:auto;"></div>
         </div>
 
-        <!-- Botão + status -->
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
-          <button class="btn btn-sim" id="btn-tele" onclick="simularTelemetria()" style="position:relative;overflow:hidden;">
-            <div id="sim-shimmer" style="position:absolute;inset:0;
-              background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%);
-              transform:translateX(-100%);pointer-events:none;"></div>
-            <svg id="tele-btn-ic" width="15" height="15" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2v3M8 11v3M2 8h3M11 8h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <button class="btn btn-grad2" id="btn-sim" onclick="simtelemetria()">
+            <svg id="sim-ic" width="15" height="15" viewbox="0 0 16 16" fill="none">
+              <path d="m8 2v3m8 11v3m2 8h3m11 8h3" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="2.5" stroke="currentcolor" stroke-width="1.8"/>
             </svg>
-            <span id="tele-btn-txt">Simular Telemetria</span>
+            <span id="sim-btn-txt">simular telemetria</span>
           </button>
-          <button class="btn btn-ghost" onclick="resetTelemetria()">Resetar histórico</button>
+          <button class="btn btn-outline btn-sm" onclick="resetsim()">resetar</button>
         </div>
 
-        <!-- Status line -->
-        <div style="margin-top:14px;min-height:36px;">
-          <div id="tele-status-line" style="display:inline-flex;align-items:center;gap:8px;
-            padding:9px 14px;border-radius:8px;font-size:0.72rem;
-            font-family:'JetBrains Mono',monospace;background:transparent;transition:all 0.3s;">
-          </div>
+        <div style="margin-top:13px;min-height:34px;">
+          <div id="sim-status" style="font-size:.72rem;font-family:'jetbrains mono',monospace;
+            display:inline-flex;align-items:center;gap:7px;padding:8px 13px;
+            border-radius:8px;background:transparent;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Configuração técnica -->
-    <div class="glass anim-rise" style="animation-delay:0.15s;">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
-        <div class="title">Configuração Técnica</div>
+    <!-- config técnica -->
+    <div class="glass anim-rise" style="animation-delay:.15s;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--b);">
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);">configuração técnica</div>
         <div class="label" style="margin-top:2px;">parâmetros do ecossistema</div>
       </div>
-      <div style="padding:18px 22px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
-          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
-            <div class="label mb-2">URL Make.com</div>
-            <div class="mono" style="font-size:0.65rem;color:var(--blue);word-break:break-all;line-height:1.5;">
-              https://hook.us2.make.com/30uxnix9ym4d8mm1tm5f776ptsvlxo3n
-            </div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:10px;">
+        <div style="padding:13px;border-radius:var(--r-sm);border:1px solid var(--b);background:rgba(4,6,14,.6);">
+          <div class="label" style="margin-bottom:6px;">url gestão (login/cadastro)</div>
+          <div class="mono" style="font-size:.6rem;color:var(--blue);word-break:break-all;line-height:1.5;">
+            https://hook.us2.make.com/b5gama4kvsd2v2ijlbuir1l05b8gs681
           </div>
-          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
-            <div class="label mb-2">Campo de Resposta</div>
-            <div class="mono" style="font-size:0.8rem;color:var(--violet);">{ "analisar": "..." }</div>
+        </div>
+        <div style="padding:13px;border-radius:var(--r-sm);border:1px solid var(--b);background:rgba(4,6,14,.6);">
+          <div class="label" style="margin-bottom:6px;">url telemetria (simulador)</div>
+          <div class="mono" style="font-size:.6rem;color:var(--violet);word-break:break-all;line-height:1.5;" id="cfg-tele-url">
+            (não configurada)
           </div>
-          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
-            <div class="label mb-2">Faixa de Simulação</div>
-            <div class="mono" style="font-size:0.8rem;color:var(--cyan);">100W — 2500W</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="padding:13px;border-radius:var(--r-sm);border:1px solid var(--b);background:rgba(4,6,14,.6);">
+            <div class="label" style="margin-bottom:4px;">campo resposta</div>
+            <div class="mono" style="font-size:.74rem;color:var(--green);">{ "analisar" }</div>
           </div>
-          <div style="padding:14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.6);">
-            <div class="label mb-2">Tarifa Aplicada</div>
-            <div class="mono" style="font-size:0.8rem;color:var(--amber);">R$ 0,92 / kWh</div>
+          <div style="padding:13px;border-radius:var(--r-sm);border:1px solid var(--b);background:rgba(4,6,14,.6);">
+            <div class="label" style="margin-bottom:4px;">tarifa</div>
+            <div class="mono" style="font-size:.74rem;color:var(--amber);">r$ 0,92/kwh</div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
-</div><!-- /tab-simulador -->
+</div>
+```
 
-</div><!-- /content -->
+  </div><!-- /content -->
+</div><!-- /dashboard -->
 
-<!-- Toasts -->
-<div id="toasts" style="position:fixed;bottom:24px;right:20px;z-index:999;
-  display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:340px;"></div>
+<!-- toasts -->
 
-<!-- ════════════════════════════════ JAVASCRIPT ════════════════════════════════ -->
+<div id="toasts" style="position:fixed;bottom:22px;right:18px;z-index:999;
+  display:flex;flex-direction:column;gap:9px;pointer-events:none;"></div>
+
+<!-- ═════════════════════════════════ javascript ═════════════════════════════════ -->
+
 <script>
 
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║   ⚡ URL DO WEBHOOK MAKE.COM                                     ║
+// ║  ⚙️  configurações de integração                                ║
 // ╚══════════════════════════════════════════════════════════════════╝
-const URL_WEBHOOK_MAKE = 'https://hook.us2.make.com/30uxnix9ym4d8mm1tm5f776ptsvlxo3n';
 
-// ── Estado global ───────────────────────────────────────────────────
-const state   = { devices: [], tick: 0 };
-const tele    = { count: 0, history: [], last: null };
-const logData = [];
+// url única de gestão (login, cadastro usuário, cadastro equipamento)
+const url_gestao = 'https://hook.us2.make.com/b5gama4kvsd2v2ijlbuir1l05b8gs681';
 
-const ICONS = {
-  'Cozinha':'🍳','Sala':'🛋️','Quarto':'🛏️','Escritório':'💼',
-  'Banheiro':'🚿','Garagem':'🚗','Área de Serviço':'🧺',
-  'Sala de Reuniões':'📋','Servidor / TI':'🖥️'
+// url do cenário de telemetria (com gemini)
+// ↓ coloque aqui sua url do make para telemetria ↓
+const url_telemetria = ''; // ← ex: 'https://hook.us2.make.com/xxxxxxxxxxxxxxxx'
+
+// ── usuário admin que vê o simulador ─────────────────────────────
+const admin_email = 'admin@teste.com';
+
+// ══════════════════════════════════════════════════════════════════
+// estado global
+// ══════════════════════════════════════════════════════════════════
+const app = {
+  user:     null,   // { nome, email, isadmin }
+  devices:  [],     // aparelhos cadastrados na sessão
+  logs:     [],
+  sim:      { count:0, history:[], last:null },
+  tick:     0,
 };
 
-// ── Relógio ─────────────────────────────────────────────────────────
-(function clock() {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  setTimeout(clock, 1000);
-})();
+// ══════════════════════════════════════════════════════════════════
+// auth
+// ══════════════════════════════════════════════════════════════════
+let authmode = 'login';
 
-// ── Tick de KPIs ────────────────────────────────────────────────────
-setInterval(() => { state.tick++; if (state.devices.length > 0 && state.tick % 8 === 0) refreshKPIs(); }, 500);
-
-function refreshKPIs() {
-  const n = state.devices.length;
-  if (n === 0) { resetKPIs(); return; }
-  const totalW = state.devices.reduce((s,d) => s + d.watts, 0);
-  const hours  = state.tick / 7200;
-  const kwh    = (totalW / 1000 * hours).toFixed(3);
-  const cost   = (parseFloat(kwh) * 0.92).toFixed(2);
-  set('kpi-watts', totalW + ' W');
-  set('kpi-kwh',   kwh);
-  set('kpi-cost',  'R$ ' + cost);
-  set('kpi-devs',  n + ' / ' + n);
-  updateMeter(totalW);
+function setauthmode(mode) {
+  authmode = mode;
+  const issignup = mode === 'signup';
+  document.getelementbyid('toggle-login').classlist.toggle('active', !issignup);
+  document.getelementbyid('toggle-signup').classlist.toggle('active', issignup);
+  document.getelementbyid('wrap-signup-name').style.display = issignup ? 'flex' : 'none';
+  document.getelementbyid('btn-auth-txt').textcontent = issignup ? 'criar conta' : 'entrar';
+  document.getelementbyid('auth-error').style.display = 'none';
+  clearautherrors();
 }
 
-function resetKPIs() {
-  set('kpi-watts','— W'); set('kpi-kwh','—');
-  set('kpi-cost','—');    set('kpi-devs','0 / 0');
-  updateMeter(0);
+function clearautherrors() {
+  document.getelementbyid('wrap-auth-email').classlist.remove('invalid');
 }
 
-// ── Tabs ─────────────────────────────────────────────────────────────
-function switchTab(id, btn) {
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  btn.classList.add('active');
+function togglepassvis() {
+  const inp = document.getElementById('auth-pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  inp.style.color = '#ffffff';
 }
 
-// ── Medidor radial ───────────────────────────────────────────────────
-function updateMeter(watts) {
-  const pct  = Math.min(100, Math.round((watts / 5000) * 100));
-  const circ = 421;
-  const ring = document.getElementById('meter-ring');
-  const pctEl= document.getElementById('meter-pct');
-  const lbl  = document.getElementById('meter-lbl');
+async function submitauth() {
+  clearautherrors();
+  const email = document.getelementbyid('auth-email').value.trim();
+  const pass  = document.getelementbyid('auth-pass').value;
+  const nome  = document.getelementbyid('auth-name').value.trim();
 
-  ring.style.strokeDasharray  = circ;
-  ring.style.strokeDashoffset = circ - (pct / 100) * circ;
-  pctEl.textContent = pct + '%';
-
-  const theme =
-    pct === 0  ? {c:'#6378ff', cls:'badge-blue', t:'Aguardando dados'} :
-    pct < 40   ? {c:'#4ade80', cls:'badge-green', t:'✓ Normal'} :
-    pct < 70   ? {c:'#fbbf24', cls:'badge-amber', t:'⚠ Elevado'} :
-                 {c:'#f87171', cls:'badge-red',   t:'✗ Crítico'};
-
-  ring.style.stroke  = theme.c;
-  ring.style.filter  = pct > 0 ? `drop-shadow(0 0 10px ${theme.c})` : 'none';
-  pctEl.style.color  = theme.c;
-  pctEl.style.textShadow = pct > 0 ? `0 0 20px ${theme.c}66` : 'none';
-  lbl.className = 'badge ' + theme.cls + ' mt-4';
-  lbl.textContent = theme.t;
-}
-
-// ── Devices list ─────────────────────────────────────────────────────
-function renderDevList() {
-  const el  = document.getElementById('dev-list');
-  const bdg = document.getElementById('dev-badge');
-  if (state.devices.length === 0) {
-    bdg.textContent = '0 online';
-    el.innerHTML = `<div class="empty">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <rect x="5" y="2" width="14" height="20" rx="2"/>
-        <path d="M9 7h6M9 11h6M9 15h4"/>
-      </svg><p>Nenhum dispositivo.<br/>Cadastre na aba 🔌.</p></div>`;
+  if (!email || !email.includes('@')) {
+    document.getelementbyid('wrap-auth-email').classlist.add('invalid');
     return;
   }
-  bdg.textContent = state.devices.length + ' online';
-  el.innerHTML = state.devices.map((d,i) => {
-    const pct = Math.min(100, Math.round((d.watts / 1500) * 100));
-    const bc  = pct > 70 ? 'var(--red)' : pct > 40 ? 'var(--amber)' : 'var(--blue)';
-    return `<div class="dev-row" style="opacity:0;animation:rise 0.4s ${i*.07}s forwards;">
-      <span style="font-size:1.05rem;min-width:22px;text-align:center;">${ICONS[d.loc]||'🔌'}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-          <span style="font-size:0.8rem;font-weight:600;color:var(--text);">${d.nome}</span>
-          <span class="mono" style="font-size:0.72rem;color:${bc};">${d.watts} W</span>
-        </div>
-        <div class="bar-track" style="height:3px;">
-          <div class="bar-fill" style="width:${pct}%;background:${bc};box-shadow:0 0 5px ${bc}55;"></div>
-        </div>
-      </div>
-      <span class="dot dot-blue"></span>
-    </div>`;
-  }).join('');
+  if (!pass) { showautherror('informe a senha.'); return; }
+  if (authmode === 'signup' && !nome) { showautherror('informe seu nome.'); return; }
+
+  const btn = document.getelementbyid('btn-auth');
+  const txt = document.getelementbyid('btn-auth-txt');
+  btn.disabled = true;
+  txt.textcontent = authmode === 'signup' ? 'criando conta...' : 'entrando...';
+
+  const payload = authmode === 'signup'
+    ? { acao: 'cadastro_user', nome, email, senha: pass }
+    : { acao: 'login', email, senha: pass };
+
+  try {
+    const res = await fetch(url_gestao, {
+      method: 'post',
+      headers: { 'content-type': 'application/json' },
+      body: json.stringify(payload),
+    });
+    if (!res.ok) throw new error('http ' + res.status);
+
+    // tenta ler resposta (sucesso/erro do servidor)
+    let data = null;
+    try { const raw = await res.text(); if (raw.trim()) data = json.parse(raw); } catch{}
+
+    // verifica se make retornou erro explícito
+    if (data && data.erro) { showautherror(data.erro); return; }
+
+    // login bem-sucedido (localmente ou pelo make)
+    const nomedisplay = nome || (data && data.nome) || email.split('@')[0];
+    loginsuccess({ nome: nomedisplay, email, isadmin: email === admin_email });
+
+  } catch (err) {
+    showautherror('falha na conexão: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    txt.textcontent = authmode === 'signup' ? 'criar conta' : 'entrar';
+  }
 }
 
-// ── Log ───────────────────────────────────────────────────────────────
-function addLog(type, msg) {
-  const ts = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  logData.unshift({ type, msg, ts });
-  if (logData.length > 60) logData.pop();
-  const colors = { success:'var(--green)', info:'var(--blue)', warn:'var(--amber)', error:'var(--red)', action:'var(--violet)' };
-  const c = document.getElementById('event-log');
-  document.getElementById('log-badge').textContent = logData.length + ' eventos';
-  c.innerHTML = logData.slice(0,14).map(l =>
-    `<div class="log-line" style="color:${colors[l.type]||'var(--muted)'};">
-      <span style="color:var(--dim);">[${l.ts}]</span> ${l.msg}</div>`).join('');
+function showautherror(msg) {
+  const el = document.getelementbyid('auth-error');
+  el.textcontent = msg; el.style.display = 'block';
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// 📊 CADASTRO
-// ══════════════════════════════════════════════════════════════════════
+function loginsuccess(user) {
+  app.user = user;
+  document.getelementbyid('login-screen').style.display = 'none';
+  document.getelementbyid('dashboard').style.display    = 'block';
+  document.getelementbyid('hdr-user').textcontent       = user.nome;
+  document.getelementbyid('hdr-role').textcontent       = user.isadmin ? 'administrador' : 'usuário';
 
-function getCadPayload() {
-  const nome  = (document.getElementById('f-name').value||'').trim();
-  const watts = parseFloat(document.getElementById('f-watts').value)||null;
-  const loc   = document.getElementById('f-loc').value||'—';
-  const tens  = document.getElementById('f-tensao').value||'220';
-  const kwh8  = watts ? parseFloat((watts/1000*8).toFixed(3)) : null;
+  // mostra abas admin
+  if (user.isadmin) {
+    document.getelementbyid('tab-btn-monitor').style.display = 'flex';
+    document.getelementbyid('tab-btn-sim').style.display     = 'flex';
+    document.getelementbyid('cfg-tele-url').textcontent =
+      url_telemetria || '(não configurada — edite url_telemetria no código)';
+  }
+
+  refreshequippreview();
+  addlog('success', `bem-vindo, ${user.nome}! login realizado.`);
+  toast(`bem-vindo, ${user.nome}!`, 'success');
+}
+
+function logout() {
+  app.user = null; app.devices = []; app.logs = [];
+  app.sim   = { count:0, history:[], last:null };
+  document.getelementbyid('dashboard').style.display    = 'none';
+  document.getelementbyid('login-screen').style.display = 'flex';
+  document.getelementbyid('auth-pass').value = '';
+  document.getelementbyid('auth-error').style.display = 'none';
+  setauthmode('login');
+}
+
+// enter key on login form
+document.addeventlistener('keydown', e => {
+  if (e.key === 'enter' && document.getelementbyid('login-screen').style.display !== 'none') {
+    submitauth();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// tabs
+// ══════════════════════════════════════════════════════════════════
+function switchtab(id, btn) {
+  document.queryselectorall('.tab-pane').foreach(p => p.classlist.remove('active'));
+  document.queryselectorall('.tab-btn').foreach(b => b.classlist.remove('active'));
+  document.getelementbyid('tab-' + id).classlist.add('active');
+  btn.classlist.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// cadastro de equipamento
+// ══════════════════════════════════════════════════════════════════
+const icons = {
+  'cozinha':'🍳','sala':'🛋️','quarto':'🛏️','escritório':'💼',
+  'banheiro':'🚿','área de serviço':'🧺','garagem':'🚗','sala de reuniões':'📋'
+};
+
+function getequippayload() {
   return {
-    tipo:'cadastro_dispositivo', timestamp:new Date().toISOString(),
-    origem:'SmartPlug AI — Dashboard',
-    dispositivo: {
-      nome:nome||'—', potencia_watts:watts, tensao_v:parseInt(tens),
-      localizacao:loc, consumo_estimado_8h_kwh:kwh8,
-      custo_estimado_8h_brl: kwh8 ? parseFloat((kwh8*0.92).toFixed(2)) : null,
-      id_sessao:'dev_'+Date.now()
-    },
-    instrucao_ia:'Classifique o impacto energético (baixo/médio/alto) e sugira horários ideais.'
+    acao:    'cadastro_equip',
+    email:   app.user?.email || '',
+    nome:    document.getelementbyid('en-nome').value.trim()   || '—',
+    tensao:  document.getelementbyid('en-tensao').value        || '220',
+    comodo:  document.getelementbyid('en-comodo').value        || '—',
+    potencia_w: parsefloat(document.getelementbyid('en-pot').value) || null,
+    timestamp: new date().toisostring(),
   };
 }
 
-function refreshCadPreview() {
-  clearCadErrors();
-  document.getElementById('cad-preview').textContent = JSON.stringify(getCadPayload(), null, 2);
+function refreshequippreview() {
+  if (document.getelementbyid('equip-preview'))
+    document.getelementbyid('equip-preview').textcontent = json.stringify(getequippayload(), null, 2);
 }
 
-function copyCadPayload() {
-  navigator.clipboard.writeText(JSON.stringify(getCadPayload(), null, 2))
-    .then(()=>toast('Payload copiado!','info'))
-    .catch(()=>toast('Erro ao copiar','error'));
+['en-nome','en-tensao','en-comodo','en-pot'].foreach(id => {
+  const el = document.getelementbyid(id);
+  if (el) el.addeventlistener('input', refreshequippreview);
+  if (el) el.addeventlistener('change', refreshequippreview);
+});
+
+function copyequippayload() {
+  navigator.clipboard.writetext(json.stringify(getequippayload(), null, 2))
+    .then(() => toast('payload copiado!', 'info'))
+    .catch(() => toast('erro ao copiar', 'error'));
 }
 
-function validateCad() {
+function validateequip() {
   let ok = true;
-  if (!document.getElementById('f-name').value.trim()) { document.getElementById('wrap-name').classList.add('invalid'); ok=false; }
-  const w = document.getElementById('f-watts').value;
-  if (!w||parseFloat(w)<=0) { document.getElementById('wrap-watts').classList.add('invalid'); ok=false; }
-  if (!document.getElementById('f-loc').value) { document.getElementById('wrap-loc').classList.add('invalid'); ok=false; }
+  if (!document.getelementbyid('en-nome').value.trim()) {
+    document.getelementbyid('en-nome-w').classlist.add('invalid'); ok = false;
+  }
+  if (!document.getelementbyid('en-comodo').value) {
+    document.getelementbyid('en-comodo-w').classlist.add('invalid'); ok = false;
+  }
+  const p = document.getelementbyid('en-pot').value;
+  if (!p || parsefloat(p) <= 0) {
+    document.getelementbyid('en-pot-w').classlist.add('invalid'); ok = false;
+  }
   return ok;
 }
-function clearCadErrors() {
-  ['wrap-name','wrap-watts','wrap-loc'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+
+function clearequiperrors() {
+  ['en-nome-w','en-comodo-w','en-pot-w'].foreach(id =>
+    document.getelementbyid(id).classlist.remove('invalid'));
 }
 
-async function cadastrarDispositivo() {
-  clearCadErrors();
-  if (!validateCad()) { toast('Preencha todos os campos.','warn'); return; }
+async function cadastrarequip() {
+  clearequiperrors();
+  if (!validateequip()) { toast('preencha todos os campos.', 'warn'); return; }
 
-  const btn = document.getElementById('btn-cad');
-  const txt = document.getElementById('btn-cad-txt');
-  const st  = document.getElementById('cad-status');
-  btn.disabled = true; txt.textContent = 'Cadastrando...';
-  st.style.color = 'var(--muted)'; st.textContent = 'aguardando...';
+  const btn = document.getelementbyid('btn-equip');
+  const txt = document.getelementbyid('btn-equip-txt');
+  const st  = document.getelementbyid('equip-status');
+  btn.disabled = true; txt.textcontent = 'cadastrando...';
+  st.style.color = 'var(--muted)'; st.textcontent = 'aguardando...';
 
-  const p = getCadPayload();
-  const { nome, potencia_watts, localizacao } = p.dispositivo;
+  const p = getequippayload();
 
   try {
-    if (URL_WEBHOOK_MAKE && URL_WEBHOOK_MAKE.startsWith('http')) {
-      const res = await fetch(URL_WEBHOOK_MAKE, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      st.style.color = 'var(--green)'; st.textContent = '✓ Cadastrado com sucesso';
-      addLog('success', `Dispositivo cadastrado: ${nome} (${potencia_watts}W)`);
-    } else {
-      await new Promise(r=>setTimeout(r,900));
-      st.style.color = 'var(--blue)'; st.textContent = '✓ Salvo localmente';
-      addLog('info', `Cadastro local: ${nome} (${potencia_watts}W)`);
-    }
+    const res = await fetch(url_gestao, {
+      method: 'post',
+      headers: { 'content-type': 'application/json' },
+      body: json.stringify(p),
+    });
+    if (!res.ok) throw new error('http ' + res.status);
 
-    state.devices.push({ nome, watts:potencia_watts, loc:localizacao, id:p.dispositivo.id_sessao, ts:new Date().toLocaleTimeString('pt-BR') });
-    refreshKPIs(); renderDevList(); renderSessionList();
-    showCadBanner(nome, potencia_watts, localizacao);
-    toast(`"${nome}" cadastrado com sucesso`, 'success');
-    document.getElementById('waiting-banner').style.display = 'none';
-    clearCadForm(false);
+    st.style.color = 'var(--green)'; st.textcontent = '✓ cadastrado com sucesso';
+    addlog('success', `aparelho cadastrado: ${p.nome} (${p.potencia_w}w) — ${p.comodo}`);
 
-  } catch(err) {
-    st.style.color = 'var(--red)'; st.textContent = '✗ ' + err.message;
-    addLog('error','Cadastro falhou: '+err.message);
-    toast('Erro: '+err.message,'error');
+    // salva localmente
+    app.devices.push({
+      id:    'dev_' + date.now(),
+      nome:  p.nome, tensao: p.tensao,
+      comodo: p.comodo, potencia_w: p.potencia_w,
+      ts: new date().tolocaletimestring('pt-br'),
+    });
+
+    renderdevicesgrid();
+    refreshdevkpis();
+    updatemonkpis();
+    showequipbanner(p.nome, p.potencia_w, p.comodo);
+    toast(`"${p.nome}" cadastrado!`, 'success');
+    clearequipform(false);
+
+  } catch (err) {
+    st.style.color = 'var(--red)'; st.textcontent = '✗ ' + err.message;
+    addlog('error', 'cadastro falhou: ' + err.message);
+    toast('erro: ' + err.message, 'error');
   } finally {
-    btn.disabled = false; txt.textContent = 'Cadastrar Dispositivo';
+    btn.disabled = false; txt.textcontent = 'cadastrar aparelho';
   }
 }
 
-function showCadBanner(nome, watts, loc) {
-  const wrap = document.getElementById('cad-success-banner');
-  wrap.innerHTML = `
-    <div style="margin-top:18px;padding:16px 20px;border-radius:12px;
-      background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.25);
-      display:flex;align-items:flex-start;gap:14px;opacity:0;animation:rise 0.5s 0.1s forwards;">
+function showequipbanner(nome, watts, comodo) {
+  const wrap = document.getelementbyid('equip-banner');
+  wrap.innerhtml = `
+    <div style="margin-top:18px;padding:15px 18px;border-radius:11px;
+      background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);
+      display:flex;align-items:center;gap:14px;
+      opacity:0;animation:rise .5s .1s forwards;">
       <div style="width:32px;height:32px;min-width:32px;border-radius:50%;
-        background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.4);
+        background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.35);
         display:flex;align-items:center;justify-content:center;">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2.5 7l3 3 6-6" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg width="13" height="13" viewbox="0 0 13 13" fill="none">
+          <path d="m2 6.5l3 3 6-6" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <div style="flex:1;">
-        <div style="font-size:0.9rem;font-weight:600;color:#4ade80;margin-bottom:4px;">
-          Dispositivo enviado para análise da IA
+        <div style="font-size:.86rem;font-weight:600;color:var(--green);margin-bottom:3px;">
+          aparelho cadastrado com sucesso!
         </div>
-        <div style="font-size:0.72rem;color:var(--muted);line-height:1.65;">
-          <span style="color:var(--text);">${nome}</span> · ${watts}W · ${loc}
-        </div>
+        <div style="font-size:.7rem;color:var(--muted);">${nome} · ${watts}w · ${comodo}</div>
       </div>
-      <button onclick="document.getElementById('cad-success-banner').innerHTML=''"
-        style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0;">✕</button>
+      <button onclick="document.getelementbyid('equip-banner').innerhtml=''"
+        style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:.95rem;">✕</button>
     </div>`;
-  setTimeout(()=>{
-    const el=wrap.firstElementChild;
-    if(el){el.style.transition='opacity 0.5s';el.style.opacity='0';setTimeout(()=>wrap.innerHTML='',500);}
-  },6000);
+  settimeout(() => {
+    const el = wrap.firstelementchild;
+    if (el) { el.style.transition='opacity .5s'; el.style.opacity='0'; settimeout(()=>wrap.innerhtml='',500); }
+  }, 6000);
 }
 
-function renderSessionList() {
-  const sec  = document.getElementById('session-section');
-  const list = document.getElementById('session-list');
-  const bdg  = document.getElementById('sess-badge');
-  if (state.devices.length === 0) { sec.style.display='none'; return; }
-  sec.style.display = 'block'; bdg.textContent = state.devices.length;
-  const imp = w => w>1500 ? {l:'ALTO',cls:'badge-red'} : w>500 ? {l:'MÉDIO',cls:'badge-amber'} : {l:'BAIXO',cls:'badge-green'};
-  list.innerHTML = state.devices.map((d,i)=>{
-    const im=imp(d.watts); const cost=((d.watts/1000)*8*30*0.92).toFixed(2);
-    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;
-      border-radius:10px;border:1px solid var(--border);background:rgba(8,11,24,0.5);
-      opacity:0;animation:rise 0.4s ${i*.06}s forwards;">
-      <span style="font-size:1rem;">${ICONS[d.loc]||'🔌'}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-          <span style="font-size:0.8rem;font-weight:600;color:var(--text);">${d.nome}</span>
-          <span class="badge ${im.cls}">${im.l}</span>
+function clearequipform(resetstatus = true) {
+  document.getelementbyid('en-nome').value  = '';
+  document.getelementbyid('en-pot').value   = '';
+  document.getelementbyid('en-comodo').value = '';
+  clearequiperrors();
+  if (resetstatus) {
+    document.getelementbyid('equip-status').textcontent = '';
+    document.getelementbyid('equip-banner').innerhtml   = '';
+  }
+  refreshequippreview();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// render devices grid
+// ══════════════════════════════════════════════════════════════════
+function renderdevicesgrid() {
+  const grid = document.getelementbyid('devices-grid');
+  if (app.devices.length === 0) {
+    grid.innerhtml = `<div class="empty anim-rise" style="grid-column:1/-1;">
+      <svg width="40" height="40" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="m9 7h6m9 11h6m9 15h4"/>
+      </svg>
+      <p>nenhum aparelho ainda.<br/>cadastre na aba <strong style="color:var(--blue)">➕ novo aparelho</strong>.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerhtml = app.devices.map((d, i) => {
+    const custoh = (d.potencia_w / 1000 * 0.92).tofixed(4);
+    const custom = (d.potencia_w / 1000 * 8 * 30 * 0.92).tofixed(2);
+    const imp    = d.potencia_w > 1500 ? {l:'alto',cls:'badge-red'} :
+                   d.potencia_w > 500  ? {l:'médio',cls:'badge-amber'} :
+                                          {l:'baixo',cls:'badge-green'};
+    return `
+    <div class="glass dev-card anim-rise" style="animation-delay:${i*.06}s;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:1.5rem;">${icons[d.comodo]||'🔌'}</div>
+          <div>
+            <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:3px;">${d.nome}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="badge ${imp.cls}">${imp.l}</span>
+              <span class="badge badge-cyan">${d.tensao}v</span>
+            </div>
+          </div>
         </div>
-        <div style="font-size:0.65rem;color:var(--muted);">${d.watts}W · ${d.loc} · ~R$ ${cost}/mês</div>
+        <button class="btn btn-red btn-xs" onclick="removedevice('${d.id}')" title="remover">
+          <svg width="11" height="11" viewbox="0 0 11 11" fill="none">
+            <path d="m1.5 1.5l8 8m9.5 1.5l-8 8" stroke="currentcolor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:0.58rem;color:var(--dim);">${d.ts}</div>
-        <div style="font-size:0.58rem;color:var(--green);margin-top:2px;">✓ enviado</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="padding:10px 12px;border-radius:8px;background:rgba(4,6,14,.6);border:1px solid var(--b);">
+          <div class="label" style="margin-bottom:3px;">potência</div>
+          <div class="mono" style="font-size:.88rem;font-weight:700;color:var(--blue);">${d.potencia_w} w</div>
+        </div>
+        <div style="padding:10px 12px;border-radius:8px;background:rgba(4,6,14,.6);border:1px solid var(--b);">
+          <div class="label" style="margin-bottom:3px;">cômodo</div>
+          <div style="font-size:.8rem;color:var(--text);">${d.comodo}</div>
+        </div>
+      </div>
+
+      <!-- simulador de gasto -->
+      <div style="padding:12px 14px;border-radius:9px;background:rgba(99,120,255,.06);border:1px solid rgba(99,120,255,.18);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="label">simular gasto</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="hrs-${d.id}" value="1" min="0.1" max="24" step="0.5"
+              style="width:58px;background:rgba(4,6,14,.8);border:1px solid var(--b);
+              color:var(--text);border-radius:6px;padding:5px 8px;font-size:.78rem;
+              font-family:'jetbrains mono',monospace;outline:none;text-align:center;"/>
+            <span style="font-size:.72rem;color:var(--muted);">hora(s)</span>
+          </div>
+        </div>
+
+        <button class="btn btn-green btn-sm" onclick="simulargasto('${d.id}',${d.potencia_w})"
+          style="width:100%;justify-content:center;">
+          <svg width="12" height="12" viewbox="0 0 12 12" fill="none">
+            <path d="m6 1v4.5l8.5 8" stroke="currentcolor" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="6" cy="6" r="5" stroke="currentcolor" stroke-width="1.3"/>
+          </svg>
+          calcular gasto
+        </button>
+
+        <div id="cost-${d.id}" class="cost-result">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div class="label" style="margin-bottom:3px;">custo estimado</div>
+              <div id="cost-val-${d.id}" class="mono"
+                style="font-size:1.4rem;font-weight:700;color:var(--green);"></div>
+            </div>
+            <div style="text-align:right;">
+              <div class="label" style="margin-bottom:3px;">fórmula</div>
+              <div id="cost-formula-${d.id}" class="mono" style="font-size:.65rem;color:var(--muted);"></div>
+            </div>
+          </div>
+          <div id="cost-proj-${d.id}" style="margin-top:10px;font-size:.68rem;color:var(--muted);
+            border-top:1px solid rgba(99,120,255,.12);padding-top:9px;line-height:1.7;"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;font-size:.62rem;color:var(--dim);text-align:right;">
+        cadastrado às ${d.ts}
       </div>
     </div>`;
   }).join('');
 }
 
-function clearCadForm(resetStatus=true) {
-  document.getElementById('f-name').value='';
-  document.getElementById('f-watts').value='';
-  document.getElementById('f-loc').value='';
-  clearCadErrors();
-  if(resetStatus){ document.getElementById('cad-status').textContent=''; document.getElementById('cad-success-banner').innerHTML=''; }
-  refreshCadPreview();
+function simulargasto(id, watts) {
+  const hrsel = document.getelementbyid('hrs-' + id);
+  const hrs   = parsefloat(hrsel?.value) || 1;
+  if (hrs <= 0) { toast('informe um número de horas válido.','warn'); return; }
+
+  // (potência × horas / 1000) × 0,92
+  const kwh   = (watts * hrs) / 1000;
+  const custo = kwh * 0.92;
+
+  const projdia = (watts * 8 / 1000 * 0.92).tofixed(2);
+  const projmes = (watts * 8 * 30 / 1000 * 0.92).tofixed(2);
+
+  const costdiv  = document.getelementbyid('cost-' + id);
+  const costval  = document.getelementbyid('cost-val-' + id);
+  const costform = document.getelementbyid('cost-formula-' + id);
+  const costproj = document.getelementbyid('cost-proj-' + id);
+
+  costval.textcontent  = 'r$ ' + custo.tofixed(4).replace('.',',');
+  costform.textcontent = `(${watts}w × ${hrs}h ÷ 1000) × r$0,92`;
+  costproj.innerhtml   =
+    `projeção: <span style="color:var(--amber)">r$ ${projdia}/dia</span> · ` +
+    `<span style="color:var(--red)">r$ ${projmes}/mês</span> (base 8h/dia)`;
+
+  costdiv.style.display = 'block';
+  addlog('info', `gasto simulado: ${watts}w × ${hrs}h = r$ ${custo.tofixed(4)}`);
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// 📡 SIMULADOR DE TELEMETRIA
-// ══════════════════════════════════════════════════════════════════════
+function removedevice(id) {
+  app.devices = app.devices.filter(d => d.id !== id);
+  renderdevicesgrid();
+  refreshdevkpis();
+  updatemonkpis();
+  addlog('action', 'dispositivo removido da sessão.');
+}
 
-function buildTelePayload() {
-  const nome = (document.getElementById('f-name').value||'').trim() || 'Aparelho de Teste';
-  const consumo_w = Math.floor(Math.random()*(2500-100+1))+100;
+// ── kpis da aba dispositivos ────────────────────────────────────────
+function refreshdevkpis() {
+  const n    = app.devices.length;
+  const totw = app.devices.reduce((s,d) => s + (d.potencia_w||0), 0);
+  const custoh = (totw / 1000 * 0.92).tofixed(4);
+  const custom = (totw / 1000 * 8 * 30 * 0.92).tofixed(2);
+  set('kpi-total',   n);
+  set('kpi-pot',     totw + ' w');
+  set('kpi-custo-h', 'r$ ' + parsefloat(custoh).tofixed(2));
+  set('kpi-custo-m', 'r$ ' + custom);
+}
+
+// ── kpis da aba monitoramento ───────────────────────────────────────
+function updatemonkpis(watts) {
+  set('mon-devs', app.devices.length);
+  if (watts != null) {
+    set('mon-watts', watts + ' w');
+    const c = (watts / 1000 * 0.92).tofixed(4);
+    set('mon-cost',  'r$ ' + parsefloat(c).tofixed(2));
+    set('mon-cost-formula', `(${watts} ÷ 1000) × 0,92`);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// simulador de telemetria (admin)
+// ══════════════════════════════════════════════════════════════════
+function buildsimpayload() {
+  const device = app.devices.length
+    ? app.devices[app.devices.length - 1].nome
+    : 'aparelho de teste';
+  const consumo_w = math.floor(math.random() * (2500 - 100 + 1)) + 100;
   return {
-    tipo:'telemetria_iot',
-    dispositivo: nome,
-    voltagem: 220,
+    tipo:       'telemetria_iot',
+    email:      app.user?.email || '',
+    dispositivo: device,
+    voltagem:   220,
     consumo_w,
-    status: 'Ativo',
-    timestamp: new Date().toISOString(),
+    status:     'ativo',
+    timestamp:  new date().toisostring(),
     metadata: {
-      origem:'SmartPlug AI — Simulador IoT',
-      corrente_a: parseFloat((consumo_w/220).toFixed(2)),
-      fator_potencia: 0.92,
-      kwh_estimado_hora: parseFloat((consumo_w/1000).toFixed(3))
-    }
+      origem:              'smartplug ai — simulador',
+      corrente_a:          parsefloat((consumo_w / 220).tofixed(2)),
+      fator_potencia:      0.92,
+      kwh_estimado_hora:   parsefloat((consumo_w / 1000).tofixed(3)),
+    },
   };
 }
 
-async function simularTelemetria() {
-  const btn    = document.getElementById('btn-tele');
-  const btnTxt = document.getElementById('tele-btn-txt');
-  const btnIc  = document.getElementById('tele-btn-ic');
-  const dot    = document.getElementById('tele-dot');
+async function simtelemetria() {
+  const url = url_telemetria;
+  if (!url || !url.startswith('http')) {
+    toast('configure url_telemetria no código.', 'warn');
+    addlog('warn', 'url_telemetria não configurada.');
+    return;
+  }
 
-  const setLoading = (msg) => {
-    btn.disabled=true;
-    btn.style.background='linear-gradient(135deg,#7c3aed,#5b21b6)';
-    btn.style.boxShadow='none';
-    btnTxt.textContent=msg;
-    btnIc.innerHTML=`<circle cx="7.5" cy="7.5" r="5" fill="none" stroke="currentColor"
+  const btn = document.getelementbyid('btn-sim');
+  const txt = document.getelementbyid('sim-btn-txt');
+  const ic  = document.getelementbyid('sim-ic');
+  const dot = document.getelementbyid('sim-dot');
+
+  const setload = (msg) => {
+    btn.disabled = true;
+    btn.style.background = 'linear-gradient(135deg,#5b21b6,#4c1d95)';
+    btn.style.boxshadow  = 'none';
+    txt.textcontent = msg;
+    ic.innerhtml = `<circle cx="7.5" cy="7.5" r="5" fill="none" stroke="currentcolor"
       stroke-width="1.6" stroke-dasharray="14 8"
-      style="animation:spin 0.85s linear infinite;transform-origin:center;"/>`;
+      style="animation:spin .85s linear infinite;transform-origin:center;"/>`;
   };
-  const setReady = () => {
-    btn.disabled=false;
-    btn.style.background='linear-gradient(135deg,#a855f7,#7c3aed)';
-    btn.style.boxShadow='0 0 24px rgba(168,85,247,0.35),0 4px 16px rgba(0,0,0,0.4)';
-    btnTxt.textContent='Simular Telemetria';
-    btnIc.innerHTML=`<path d="M8 2v3M8 11v3M2 8h3M11 8h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/>`;
+  const setready = () => {
+    btn.disabled = false;
+    btn.style.background = 'linear-gradient(135deg,var(--violet),var(--violet2))';
+    btn.style.boxshadow  = '0 0 22px rgba(168,85,247,.3),0 4px 16px rgba(0,0,0,.4)';
+    txt.textcontent = 'simular telemetria';
+    ic.innerhtml = `<path d="m8 2v3m8 11v3m2 8h3m11 8h3" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="8" cy="8" r="2.5" stroke="currentcolor" stroke-width="1.8"/>`;
   };
 
-  setLoading('Enviando telemetria...');
-  setTeleStatus('sending','⏳ Enviando telemetria...');
-  iaStateThinking(); // limpa o card e exibe spinner
-  dot.style.background='var(--amber)'; dot.style.boxShadow='0 0 6px var(--amber)';
+  setload('enviando...');
+  setsimstatus('sending', '⏳ enviando telemetria...');
+  iathinking();
+  dot.style.background = 'var(--amber)'; dot.style.boxshadow = '0 0 6px var(--amber)'; dot.style.animation = 'none';
 
-  const payload = buildTelePayload();
-  tele.last = payload;
-  document.getElementById('tele-preview').textContent = JSON.stringify(payload, null, 2);
+  const payload = buildsimpayload();
+  app.sim.last  = payload;
+  document.getelementbyid('sim-preview').textcontent = json.stringify(payload, null, 2);
 
-  // Atualiza KPIs imediatamente
-  const w = payload.consumo_w;
-  set('kpi-watts', w + ' W');
-  set('kpi-watts-sub','leitura ao vivo · telemetria');
-  set('kpi-cost','R$ ' + (w/1000*0.92).toFixed(2));
-  set('kpi-cost-sub', `(${w} ÷ 1000) × 0,92`);
-  updateMeter(w);
-  document.getElementById('waiting-banner').style.display='none';
+  updatemonkpis(payload.consumo_w);
+  switchmonstatus('active');
 
   try {
-    // ── FASE 1: POST ──────────────────────────────────────────────
-    const res = await fetch(URL_WEBHOOK_MAKE, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
+    // ── post ──────────────────────────────────────────────────────
+    const res = await fetch(url, {
+      method:  'post',
+      headers: { 'content-type': 'application/json' },
+      body:    json.stringify(payload),
     });
-    if (!res.ok) throw new Error('HTTP '+res.status);
+    if (!res.ok) throw new error('http ' + res.status);
 
-    setTeleStatus('ok','✅ Dados recebidos pela automação!');
-    addLog('success',`Telemetria enviada — ${payload.dispositivo} · ${w}W`);
+    setsimstatus('ok', '✅ dados recebidos!');
+    addlog('success', `telemetria enviada — ${payload.dispositivo} · ${payload.consumo_w}w`);
 
-    // ── FASE 2: lê resposta e captura "analisar" ──────────────────
-    setLoading('Processando...');
-    setTeleStatus('sending','⏳ IA processando resposta...');
+    // ── lê resposta (analisar) ─────────────────────────────────────
+    setload('processando...');
+    setsimstatus('sending', '⏳ ia analisando...');
 
-    let insightText = null;
+    let insight = null;
     try {
       const raw = await res.text();
       if (raw && raw.trim()) {
         try {
-          const parsed = JSON.parse(raw);
-          // ← Campo principal: "analisar"
-          const fields = ['analisar','insight','message','texto','resultado','resposta','output','text','analysis'];
-          for (const f of fields) {
-            if (parsed[f] && typeof parsed[f]==='string') { insightText=parsed[f]; break; }
-          }
-          if (!insightText) insightText = JSON.stringify(parsed, null, 2);
-        } catch { insightText = raw.trim(); }
+          const parsed = json.parse(raw);
+          const fields = ['analisar','insight','message','texto','resultado','output','text'];
+          for (const f of fields) { if (parsed[f] && typeof parsed[f]==='string') { insight=parsed[f]; break; } }
+          if (!insight) insight = json.stringify(parsed, null, 2);
+        } catch { insight = raw.trim(); }
       }
-    } catch { /* ignora */ }
+    } catch {}
 
-    iaStateResult(insightText, payload.dispositivo, w);
-    toast(`Leitura enviada: ${w}W · resposta da IA recebida`, 'success');
+    iaresult(insight, payload.dispositivo, payload.consumo_w);
+    toast(`leitura: ${payload.consumo_w}w · ia respondeu`, 'success');
 
-  } catch(err) {
-    setTeleStatus('err','✗ Falha: '+err.message);
-    addLog('error','Telemetria falhou: '+err.message);
-    iaStateError(err.message);
-    toast('Erro no envio: '+err.message,'error');
-    dot.style.background='var(--red)'; dot.style.boxShadow='0 0 6px var(--red)';
+    // troca para aba monitoramento automaticamente
+    const monbtn = document.getelementbyid('tab-btn-monitor');
+    if (monbtn && app.user?.isadmin) {
+      switchtab('monitor', monbtn);
+    }
+
+  } catch (err) {
+    setsimstatus('err', '✗ ' + err.message);
+    addlog('error', 'telemetria falhou: ' + err.message);
+    iaerror(err.message);
+    toast('erro: ' + err.message, 'error');
+    dot.style.background = 'var(--red)'; dot.style.boxshadow = '0 0 6px var(--red)';
+    switchmonstatus('error');
   } finally {
-    setReady();
-    tele.count++;
-    tele.history.unshift({ n:tele.count, device:payload.dispositivo, w, ts:new Date().toLocaleTimeString('pt-BR') });
-    if (tele.history.length>20) tele.history.pop();
-    renderTeleHistory();
-    dot.style.background='var(--blue)'; dot.style.boxShadow='0 0 8px var(--blue)'; dot.style.animation='pulseDot 2s infinite';
-    // Shimmer
-    const sh=document.getElementById('sim-shimmer');
-    sh.style.transition='transform 0.5s'; sh.style.transform='translateX(100%)';
-    setTimeout(()=>{sh.style.transition='none';sh.style.transform='translateX(-100%)';},550);
+    setready();
+    app.sim.count++;
+    app.sim.history.unshift({ n: app.sim.count, device: payload.dispositivo, w: payload.consumo_w, ts: new date().tolocaletimestring('pt-br') });
+    if (app.sim.history.length > 20) app.sim.history.pop();
+    rendersimhist();
+    dot.style.background = 'var(--blue)'; dot.style.boxshadow = '0 0 8px var(--blue)'; dot.style.animation = 'pdot 2s infinite';
   }
 }
 
-// ── Estados do card IA Insight ────────────────────────────────────────
-function iaStateClear() {
-  // Para qualquer typewriter ativo
-  const t = document.getElementById('ia-text');
-  if (t._ti) { clearInterval(t._ti); t._ti = null; }
-  t.textContent = '';
-  document.getElementById('ia-badge').style.display = 'none';
-  document.getElementById('ia-ts').textContent = '';
-}
-
-function iaStateThinking() {
-  iaStateClear();
-  const wrap = document.getElementById('ia-icon-wrap');
-  wrap.style.background = 'rgba(99,120,255,0.12)';
-  wrap.style.border      = '1px solid rgba(99,120,255,0.3)';
-  document.getElementById('ia-icon-static').style.display = 'none';
-  document.getElementById('ia-icon-spin').style.display   = 'block';
-
-  document.getElementById('ia-state-idle').style.display    = 'none';
-  document.getElementById('ia-state-thinking').style.display= 'flex';
-  document.getElementById('ia-state-result').style.display  = 'none';
-  document.getElementById('ia-state-error').style.display   = 'none';
-}
-
-function iaStateResult(text, device, watts) {
-  const wrap = document.getElementById('ia-icon-wrap');
-  wrap.style.background = 'rgba(74,222,128,0.1)';
-  wrap.style.border      = '1px solid rgba(74,222,128,0.3)';
-  document.getElementById('ia-icon-static').style.display = 'block';
-  document.getElementById('ia-icon-spin').style.display   = 'none';
-
-  document.getElementById('ia-state-idle').style.display    = 'none';
-  document.getElementById('ia-state-thinking').style.display= 'none';
-  document.getElementById('ia-state-result').style.display  = 'block';
-  document.getElementById('ia-state-error').style.display   = 'none';
-
-  const hasText = text && text.trim().length > 0;
-  const display = hasText ? text : `Leitura recebida — ${device} · ${watts}W · R$ ${(watts/1000*0.92).toFixed(2)}/h`;
-
-  // Badge e timestamp
-  const badge = document.getElementById('ia-badge');
-  badge.style.display = 'inline-flex';
-  document.getElementById('ia-ts').textContent = new Date().toLocaleTimeString('pt-BR');
-
-  // Typewriter
-  const el = document.getElementById('ia-text');
-  el.textContent = '';
-  let i = 0;
-  const speed = Math.max(10, Math.min(28, 1800 / display.length));
-  el._ti = setInterval(() => {
-    if (i >= display.length) { clearInterval(el._ti); el._ti=null; return; }
-    el.textContent += display[i++];
-  }, speed);
-
-  addLog('success', `IA Insight recebido: ${display.slice(0,60)}${display.length>60?'…':''}`);
-}
-
-function iaStateError(msg) {
-  document.getElementById('ia-icon-static').style.display = 'block';
-  document.getElementById('ia-icon-spin').style.display   = 'none';
-  document.getElementById('ia-state-idle').style.display    = 'none';
-  document.getElementById('ia-state-thinking').style.display= 'none';
-  document.getElementById('ia-state-result').style.display  = 'none';
-  document.getElementById('ia-state-error').style.display   = 'block';
-  document.getElementById('ia-error-text').textContent = '✗ Erro na comunicação: ' + msg;
-}
-
-function setTeleStatus(state, msg) {
-  const el = document.getElementById('tele-status-line');
-  const map = {
-    sending:{ bg:'rgba(251,191,36,0.1)',   border:'rgba(251,191,36,0.3)',  color:'var(--amber)' },
-    ok:     { bg:'rgba(74,222,128,0.1)',   border:'rgba(74,222,128,0.3)', color:'var(--green)' },
-    err:    { bg:'rgba(248,113,113,0.1)',  border:'rgba(248,113,113,0.3)',color:'var(--red)'   },
+function setsimstatus(st, msg) {
+  const el = document.getelementbyid('sim-status');
+  const m  = {
+    sending: { bg:'rgba(251,191,36,.1)', border:'rgba(251,191,36,.3)', c:'var(--amber)' },
+    ok:      { bg:'rgba(74,222,128,.1)', border:'rgba(74,222,128,.3)', c:'var(--green)' },
+    err:     { bg:'rgba(248,113,113,.1)',border:'rgba(248,113,113,.3)',c:'var(--red)'   },
   };
-  const cfg = map[state]||map.ok;
-  el.style.cssText = `display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;
-    font-size:0.72rem;font-family:'JetBrains Mono',monospace;transition:all 0.3s;
-    background:${cfg.bg};border:1px solid ${cfg.border};color:${cfg.color};`;
-  el.textContent = msg;
+  const cfg = m[st] || m.ok;
+  el.style.csstext = `display:inline-flex;align-items:center;gap:7px;padding:8px 13px;
+    border-radius:8px;font-size:.72rem;font-family:'jetbrains mono',monospace;
+    background:${cfg.bg};border:1px solid ${cfg.border};color:${cfg.c};`;
+  el.textcontent = msg;
 }
 
-function renderTeleHistory() {
-  const wrap  = document.getElementById('tele-history-wrap');
-  const list  = document.getElementById('tele-history');
-  const badge = document.getElementById('tele-count-badge');
-  if (tele.history.length === 0) { wrap.style.display='none'; badge.style.display='none'; return; }
+function switchmonstatus(mode) {
+  const el = document.getelementbyid('mon-status-badge');
+  if (!el) return;
+  const map = {
+    idle:   { cls:'badge-blue',  t:'aguardando' },
+    active: { cls:'badge-green', t:'ativo' },
+    error:  { cls:'badge-red',   t:'erro' },
+  };
+  const cfg = map[mode] || map.idle;
+  el.classname = 'badge ' + cfg.cls;
+  el.textcontent = cfg.t;
+}
+
+function rendersimhist() {
+  const wrap  = document.getelementbyid('sim-hist-wrap');
+  const list  = document.getelementbyid('sim-hist');
+  const badge = document.getelementbyid('sim-count-badge');
+  if (app.sim.history.length === 0) { wrap.style.display='none'; badge.style.display='none'; return; }
   wrap.style.display='block'; badge.style.display='inline-flex';
-  badge.textContent = tele.count + (tele.count===1?' leitura':' leituras');
-  list.innerHTML = tele.history.map((h,i)=>{
+  badge.textcontent = app.sim.count + (app.sim.count===1?' leitura':' leituras');
+  list.innerhtml = app.sim.history.map((h,i) => {
     const bc = h.w>1800?'var(--red)':h.w>900?'var(--amber)':'var(--blue)';
-    const pct= Math.round((h.w/2500)*100);
-    return `<div class="tele-row" style="opacity:0;animation:rise 0.35s ${i*.04}s forwards;">
-      <span class="mono" style="font-size:0.6rem;color:var(--dim);min-width:28px;text-align:right;">#${String(tele.count-i).padStart(2,'0')}</span>
+    const pct= math.round((h.w/2500)*100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;
+      border-radius:8px;border:1px solid var(--b);background:rgba(4,6,14,.6);
+      opacity:0;animation:rise .35s ${i*.04}s forwards;">
+      <span class="mono" style="font-size:.6rem;color:var(--dim);min-width:28px;text-align:right;">#${string(app.sim.count-i).padstart(2,'0')}</span>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:0.7rem;color:var(--muted);">${h.device}</span>
-          <span class="mono" style="font-size:0.72rem;font-weight:700;color:${bc};">${h.w} W</span>
+          <span style="font-size:.7rem;color:var(--muted);">${h.device}</span>
+          <span class="mono" style="font-size:.72rem;font-weight:700;color:${bc};">${h.w} w</span>
         </div>
-        <div class="bar-track" style="height:2px;">
-          <div class="bar-fill" style="width:${pct}%;background:${bc};box-shadow:0 0 4px ${bc}55;"></div>
+        <div style="height:2px;background:var(--dim);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${bc};border-radius:2px;box-shadow:0 0 4px ${bc}55;"></div>
         </div>
       </div>
-      <span style="font-size:0.58rem;color:var(--dim);white-space:nowrap;">${h.ts}</span>
+      <span style="font-size:.58rem;color:var(--dim);white-space:nowrap;">${h.ts}</span>
     </div>`;
   }).join('');
 }
 
-function copyTelePayload() {
-  if (!tele.last) { toast('Gere uma leitura primeiro','warn'); return; }
-  navigator.clipboard.writeText(JSON.stringify(tele.last,null,2))
-    .then(()=>toast('Payload copiado!','info'))
-    .catch(()=>toast('Erro ao copiar','error'));
+function copysimpayload() {
+  if (!app.sim.last) { toast('gere uma leitura primeiro.','warn'); return; }
+  navigator.clipboard.writetext(json.stringify(app.sim.last,null,2))
+    .then(()=>toast('payload copiado!','info'))
+    .catch(()=>toast('erro ao copiar','error'));
 }
 
-function resetTelemetria() {
-  tele.count=0; tele.history=[]; tele.last=null;
-  document.getElementById('tele-preview').textContent='Clique em "Simular Telemetria" para gerar a primeira leitura...';
-  document.getElementById('tele-status-line').style.cssText='display:inline-flex;background:transparent;border:none;';
-  document.getElementById('tele-status-line').textContent='';
-  const dot=document.getElementById('tele-dot');
-  dot.style.background='var(--dim)'; dot.style.boxShadow='none'; dot.style.animation='none';
-  renderTeleHistory();
-  addLog('info','Histórico de telemetria resetado');
-  toast('Histórico limpo','info');
+function resetsim() {
+  app.sim = { count:0, history:[], last:null };
+  document.getelementbyid('sim-preview').textcontent = 'clique em "simular telemetria" para gerar...';
+  document.getelementbyid('sim-status').style.csstext = 'display:inline-flex;background:transparent;border:none;';
+  document.getelementbyid('sim-status').textcontent = '';
+  const dot = document.getelementbyid('sim-dot');
+  dot.style.background = 'var(--dim)'; dot.style.boxshadow='none'; dot.style.animation='none';
+  rendersimhist();
+  addlog('info','histórico do simulador resetado.');
+  toast('simulador resetado','info');
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// ia insight states
+// ══════════════════════════════════════════════════════════════════
+function iathinking() {
+  const t = document.getelementbyid('ia-text');
+  if (t && t._ti) { clearinterval(t._ti); t._ti=null; }
+  document.getelementbyid('ia-ic-s').style.display    = 'none';
+  document.getelementbyid('ia-ic-spin').style.display = 'block';
+  document.getelementbyid('ia-badge').style.display   = 'none';
+  document.getelementbyid('ia-ts').textcontent        = '';
+  document.getelementbyid('ia-idle').style.display    = 'none';
+  document.getelementbyid('ia-thinking').style.display= 'flex';
+  document.getelementbyid('ia-result').style.display  = 'none';
+  document.getelementbyid('ia-err').style.display     = 'none';
+}
+
+function iaresult(text, device, watts) {
+  document.getelementbyid('ia-ic-s').style.display    = 'block';
+  document.getelementbyid('ia-ic-spin').style.display = 'none';
+  document.getelementbyid('ia-thinking').style.display= 'none';
+  document.getelementbyid('ia-result').style.display  = 'block';
+  document.getelementbyid('ia-badge').style.display   = 'inline-flex';
+  document.getelementbyid('ia-ts').textcontent        = new date().tolocaletimestring('pt-br');
+
+  const display = (text && text.trim()) || `leitura: ${device} · ${watts}w · r$ ${(watts/1000*0.92).tofixed(2)}/h`;
+  const el = document.getelementbyid('ia-text');
+  el.textcontent = '';
+  let i = 0;
+  const speed = math.max(10, math.min(28, 1800 / display.length));
+  el._ti = setinterval(() => {
+    if (i >= display.length) { clearinterval(el._ti); el._ti=null; return; }
+    el.textcontent += display[i++];
+  }, speed);
+  addlog('success', `ia insight: ${display.slice(0,70)}${display.length>70?'…':''}`);
+}
+
+function iaerror(msg) {
+  document.getelementbyid('ia-ic-s').style.display    = 'block';
+  document.getelementbyid('ia-ic-spin').style.display = 'none';
+  document.getelementbyid('ia-thinking').style.display= 'none';
+  document.getelementbyid('ia-result').style.display  = 'none';
+  document.getelementbyid('ia-err').style.display     = 'block';
+  document.getelementbyid('ia-err-txt').textcontent   = '✗ ' + msg;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// log
+// ══════════════════════════════════════════════════════════════════
+function addlog(type, msg) {
+  const ts = new date().tolocaletimestring('pt-br',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  app.logs.unshift({ type, msg, ts });
+  if (app.logs.length > 60) app.logs.pop();
+  const colors = {success:'var(--green)',info:'var(--blue)',warn:'var(--amber)',error:'var(--red)',action:'var(--violet)'};
+  const c = document.getelementbyid('event-log');
+  if (!c) return;
+  set('log-badge', app.logs.length);
+  c.innerhtml = app.logs.slice(0,14).map(l =>
+    `<div style="font-size:.67rem;line-height:1.7;font-family:'jetbrains mono',monospace;color:${colors[l.type]||'var(--muted)'};">
+      <span style="color:var(--dim);">[${l.ts}]</span> ${l.msg}</div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// toast
+// ══════════════════════════════════════════════════════════════════
 function toast(msg, type='info') {
-  const wrap = document.getElementById('toasts');
-  const el   = document.createElement('div');
+  const wrap = document.getelementbyid('toasts');
+  const el   = document.createelement('div');
   const icon = {success:'✅',error:'✗',warn:'⚠',info:'ℹ'}[type]||'ℹ';
-  el.className = `toast toast-${type}`;
-  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
-  wrap.appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.35s'; setTimeout(()=>el.remove(),350); },3500);
+  el.classname = `toast toast-${type}`;
+  el.innerhtml = `<span>${icon}</span><span>${msg}</span>`;
+  wrap.appendchild(el);
+  settimeout(()=>{
+    el.style.opacity='0'; el.style.transform='translatex(20px)';
+    el.style.transition='all .35s'; settimeout(()=>el.remove(),380);
+  },3500);
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────
-function set(id,val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+// ══════════════════════════════════════════════════════════════════
+// utils
+// ══════════════════════════════════════════════════════════════════
+function set(id, val) { const el=document.getelementbyid(id); if(el) el.textcontent=val; }
 
-// ── Init ──────────────────────────────────────────────────────────────
-refreshCadPreview();
-updateMeter(0);
-addLog('info','SmartPlug AI inicializado');
-addLog('info','Aguardando dados — use o Simulador para enviar telemetria');
+// init
+refreshequippreview();
 </script>
-
-<script>
-async function carregarAnaliseIA() {
-  try {
-    const resposta = await fetch("/api/energia?t=" + Date.now());
-    const dados = await resposta.json();
-
-    console.log("Resposta da API:", dados);
-
-    if (!dados.resultado) return;
-
-    const textoLimpo = dados.resultado.replace(/\\n/g, "\n");
-
-    const idle = document.getElementById("ia-state-idle");
-    const thinking = document.getElementById("ia-state-thinking");
-    const result = document.getElementById("ia-state-result");
-    const error = document.getElementById("ia-state-error");
-    const iaText = document.getElementById("ia-text");
-
-    if (idle) idle.style.display = "none";
-    if (thinking) thinking.style.display = "none";
-    if (error) error.style.display = "none";
-    if (result) result.style.display = "block";
-
-    if (iaText) {
-      iaText.textContent = textoLimpo;
-    }
-
-  } catch (erro) {
-    console.error("Erro ao buscar análise da IA:", erro);
-  }
-}
-
-carregarAnaliseIA();
-setInterval(carregarAnaliseIA, 5000);
-</script>
-
-<script>
-console.log("SCRIPT NOVO RODANDO");
-</script>
-
 
 </body>
 </html>
