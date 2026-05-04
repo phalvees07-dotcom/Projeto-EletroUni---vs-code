@@ -25,3 +25,4 @@ export default function handler(req, res) {
     erro: "Método não permitido"
   });
 }
+
