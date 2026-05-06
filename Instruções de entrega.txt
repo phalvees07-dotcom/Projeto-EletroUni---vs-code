@@ -1,0 +1,109 @@
+Olá, pessoal!
+
+Conforme conversamos em aula, este será o local de entrega do projeto final da disciplina Engenharia de Prompt e Aplicações em IA.
+
+Como conteúdo, atentem-se para o fato de que a entrega final deve conter tudo o que foi desenvolvido na primeira entrega, com os devidos ajustes, refinamentos e amadurecimento da proposta, especialmente a partir das discussões em aula e do diagnóstico por pares.
+
+O projeto final deve apresentar, de forma clara e coerente, um ecossistema de IA, composto por:
+
+
+
+
+
+uma solução de automação, responsável por processar dados, integrar serviços ou executar tarefas em fluxo automatizado;
+
+
+
+uma solução de desenvolvimento, representada por uma aplicação leve, página funcional, interface navegável, protótipo ou ambiente de interação com o usuário;
+
+
+
+um diagrama do ecossistema, demonstrando os componentes, o fluxo de dados e a relação entre as partes desenvolvidas e entregues;
+
+
+
+um memorial de construção, explicando o problema, o público-alvo, as ferramentas escolhidas, o papel da IA, os prompts ou estratégias utilizados, as limitações e as melhorias futuras.
+
+A entrega deverá ser feita apenas pelo LÍDER do grupo, ou por um membro delegado por ele em caso de impedimento.
+
+A entrega deve conter:
+
+1) Link do repositório do projeto
+
+Pode ser o link do GitHub, GitLab ou plataforma equivalente, se estiver público.
+
+Se estiver privado, enviar print da tela de colaboradores/convidados, demonstrando que o acesso ao repositório foi disponibilizado (Se houver publicação).
+
+2) Arquivo ZIP do projeto
+
+O envio deverá ser feito em formato ZIP.
+
+Não deverá ser enviado em outro formato, sob possibilidade de desconto na nota.
+
+No ZIP, organizem o material de forma clara. Recomenda-se incluir:
+
+
+
+
+
+pasta do projeto, protótipo ou interface;
+
+
+
+diagrama do ecossistema;
+
+
+
+memorial de construção;
+
+
+
+arquivos complementares;
+
+
+
+README ou documento orientando a navegação no material.
+
+Se o projeto da equipe ultrapassar o limite de upload da plataforma, vocês poderão remover arquivos muito pesados, como vídeos, mídias ou imagens excessivas, desde que isso não comprometa a compreensão da proposta. Nesse caso, deixem isso explicado no README.
+
+3) Evidências da solução proposta
+
+A equipe deve apresentar, no material enviado, evidências suficientes para compreensão da proposta, como por exemplo:
+
+
+
+
+
+protótipo navegável;
+
+
+
+telas conceituais;
+
+
+
+fluxo desenhado;
+
+
+
+automação simulada;
+
+
+
+prompts utilizados;
+
+
+
+estrutura de integração entre ferramentas;
+
+
+
+estimativa de funcionamento do ecossistema.
+
+Prazo
+
+O prazo de entrega para todos os grupos será o primeiro dia de apresentação da turma.
+
+Vocês poderão enviar quantas versões desejarem durante o prazo estipulado, porém considerarei somente a ÚLTIMA entrega.
+
+A equipe deverá apresentar a versão efetivamente entregue aqui na plataforma. Isso é muito importante para fins de conferência e rastreabilidade.
